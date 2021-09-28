@@ -34,22 +34,19 @@ options(scipen = 99)
 Sys.setenv(lang = "en_US")
 
 ## read in data frames & manipulate
+setwd("C:/Users/alexa/Documents/GitHub/covid")
 
-setwd("C:/Users/alexa/Desktop/Uni/Bachelorarbeit/R-Code")
 
-# dfds contains shapefile for German county-data, but also some waterways that need to be dropped 
-dfds <- st_read("Data/shapefiles/250_NUTS3.shp")
-dfds <- subset(dfds, select = c(3,4))
-dfds <- dfds[-c(402:428),]
-
-# dfdd contains the actual data on county-level
-dfdd <- read_excel("Data/inkar.xls", col_types = c("guess", "guess", "guess", rep("numeric",21)))
+## dfdd contains the data on county-level
+dfdd <- read_excel("data/inkar.xls", col_types = c("guess", "guess", "guess", 
+                                                   rep("numeric",11)))
 
 dfdd <- dfdd[-1,]
 names(dfdd) <- c("KRS", "countyName", "countyCity", 
-                 "unemployment", "workersNoEdu", "workersAcadem", "shareForeign",
-                 "shareWomen", "AfD", "hhInc", "medInc", "hospBeds", 
-                 "popDensity", "popPerDoc")
+                 "unemployment", "workersNoEdu", "workersAcadem", "shareWomen", 
+                 "shareForeign", "AfD", "hhInc", "medInc", "hospBeds", "popPerDoc",
+                 "popDensity")
+
 # east-west dummy and state variables 
 dfdd$east <- ifelse(
   str_detect(dfdd$KRS, "^12")|str_detect(dfdd$KRS, "^13")|
@@ -95,10 +92,11 @@ hospBedsMeans <- aggregate(dfdd[, "hospBeds"], list(dfdd$state), mean, na.rm = T
 dfdd[288,"hospBeds"] <- hospBedsMeans[4,2]
 dfdd[392,"hospBeds"] <- hospBedsMeans[16,2]
 
-# dfgisd contains German Index of Social Deprivation by RKI
+
+## dfgisd contains German Index of Social Deprivation by RKI
 # 0 needs to be added to some KRS
 # two counties merged in 2016, thus their weighted avg GISD is calculated and the old county deleted
-dfgisd <- read.csv("Data/Kreis_2014.csv", colClasses = c("NULL", "character", "NULL", "numeric","numeric","NULL","NULL","NULL"), 
+dfgisd <- read.csv("data/Kreis_2014.csv", colClasses = c("NULL", "character", "NULL", "numeric","numeric","NULL","NULL","NULL"), 
                    col.names = c("","KRS","","population","GISD","","",""))
 dfgisd$KRS <- ifelse(str_length(dfgisd$KRS)==4,str_c("0", dfgisd$KRS, sep = "", collapse = NULL),dfgisd$KRS)
 dfgisd[21,2] <- (dfgisd[21,2]*dfgisd[21,3]+dfgisd[25,2]*dfgisd[25,3])/(dfgisd[21,2]+dfgisd[25,2])
@@ -107,7 +105,40 @@ dfgisd <- dfgisd[-c(25),]
 dfgisd[,"population"] <- NULL
 
 
-# dfmerge contains both referencing systems of df
+## dfeu2 contains population + factor to age-standardise (EU Standard Population 2013)
+dfeu <- read_excel("data/PROJ_19RP3__custom_13386841632821589108.xlsx", sheet = 3, range = "A11:CY413", col_types = c("guess", rep("numeric",102)))
+dfeu <- dfeu[-1,]
+
+# sum data in each pop. bracket 
+dfeu$y0004 <- as.numeric(apply(dfeu[,4:8], 1, sum))
+dfeu$y0514 <- as.numeric(apply(dfeu[,9:18], 1, sum))
+dfeu$y1534 <- as.numeric(apply(dfeu[,19:38], 1, sum))
+dfeu$y3559 <- as.numeric(apply(dfeu[,39:63], 1, sum))
+dfeu$y6079 <- as.numeric(apply(dfeu[,64:83], 1, sum))
+dfeu$y80 <- as.numeric(apply(dfeu[,84:103], 1, sum))
+
+# formula for changing total cases to cases per eu standard population bracket (e.g. 0-4): 
+  # cases per eu 0-4 = cases * (pop 0-4 eu) / (pop 0-4 county)
+  # latter part is a factor that is calculated for each county and bracket below
+  # (eu standard population by eurostat 2013)
+dfeu$fy0004 <- 5000 / (dfeu$y0004) 
+dfeu$fy0514 <- 11000 / (dfeu$y0514) 
+dfeu$fy1534 <- 24000 / (dfeu$y1534) 
+dfeu$fy3559 <- 34500 / (dfeu$y3559) 
+dfeu$fy6079 <- 20500 / (dfeu$y6079) 
+dfeu$fy80 <- 5000 / (dfeu$y80) 
+
+dfeu2 <- dfeu[,c(1,2,110:115)]
+dfeu2 <- rename(dfeu2, name = "AGE (Labels)", total = Total)
+
+
+## dfds contains shapefile for German county-data, but also waterways to be dropped 
+dfds <- st_read("data/shapefiles/250_NUTS3.shp")
+dfds <- subset(dfds, select = c(3,4))
+dfds <- dfds[-c(402:428),]
+
+
+## dfmerge contains 2 referencing systems for counties used by previous data frames
 dfmerge <- read_excel("Data/04_KreiseVorjahr.xlsx", sheet = 2, range = "A6:F478", 
                       col_types = c("guess", "skip", "guess", "guess", "skip", "numeric"))
 names(dfmerge) <- c("KRS","name", "NUTS_CODE", "population")
@@ -119,11 +150,37 @@ dfmerge <- subset(dfmerge, KRSnew > 999)
 dfmerge$KRSnew <- NULL
 
 
+## Combine county data
 # Combine dfdd and dfgisd 
 dfdd <- merge(dfdd, dfgisd, by.dfdd = KRS, by.dfgisd = KRS)
 
 # Combine dfdd and dfmerge for data analysis 
 dfdd <- merge(dfmerge, dfdd, by.dfmerge = KRS, by.dfdd = KRS)
+
+
+
+
+
+
+# Combine dfdd and dfeu
+dfdd <- merge(dfeu, dfdd, by.dfeu)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ### Working with COVID-19 Data
 
