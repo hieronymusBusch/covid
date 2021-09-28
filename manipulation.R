@@ -48,10 +48,7 @@ dfdd <- read_excel("Data/inkar.xls", col_types = c("guess", "guess", "guess", re
 dfdd <- dfdd[-1,]
 names(dfdd) <- c("KRS", "countyName", "countyCity", 
                  "unemployment", "workersNoEdu", "workersAcadem", "shareForeign",
-                 "shareWomen", 
-                 "age0.5", "age6.17", "age18.24", "age25.29",
-                 "age30.49", "age50.64", "age65.74", "age75.84", 
-                 "age85", "avgAge", "AfD", "hhInc", "medInc", "hospBeds", 
+                 "shareWomen", "AfD", "hhInc", "medInc", "hospBeds", 
                  "popDensity", "popPerDoc")
 # east-west dummy and state variables 
 dfdd$east <- ifelse(
