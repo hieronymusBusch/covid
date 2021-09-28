@@ -129,7 +129,7 @@ dfeu$fy6079 <- 20500 / (dfeu$y6079)
 dfeu$fy80 <- 5000 / (dfeu$y80) 
 
 dfeu2 <- dfeu[,c(1,2,110:115)]
-dfeu2 <- rename(dfeu2, name = "AGE (Labels)", total = Total)
+dfeu2 <- rename(dfeu2, name = "AGE (Labels)", pop = Total)
 
 
 ## dfds contains shapefile for German county-data, but also waterways to be dropped 
@@ -157,60 +157,163 @@ dfdd <- merge(dfdd, dfgisd, by.dfdd = KRS, by.dfgisd = KRS)
 # Combine dfdd and dfmerge for data analysis 
 dfdd <- merge(dfmerge, dfdd, by.dfmerge = KRS, by.dfdd = KRS)
 
-
-
-
-
-
 # Combine dfdd and dfeu
-dfdd <- merge(dfeu, dfdd, by.dfeu)
+dfdd <- dfdd[order(dfdd$countyName),]
 
+# in order to make similarly-named counties appear before city-districts 
+  # as is the order in dfdd, delete the marker "Landkreis" 
+  # which will result in counties being named similarly as in dfdd, leading to 
+  # the same alphabetical order once the df is sorted 
+dfeu2$name <- str_replace_all(dfeu2$name, ", Landkreis", "")
+dfeu2 <- dfeu2[order(dfeu2$name),]
+dfdd <- cbind(dfdd,dfeu2)
+dfdd <- dfdd[, c(1,3,2,5,36,6,4,37,7:35,38:43)]
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+## deleting all but one name variable and one pop var (as they are the same)
+dfdd$name.1 <- NULL
+dfdd$pop <- NULL
+dfdd$countyName <- NULL
 
 
 ### Working with COVID-19 Data
+## as file to big for github, it needs to be downloaded seperapte via
+## https://npgeo-corona-npgeo-de.hub.arcgis.com/
 
 # Reading in RKI COVID-19 data from Germany, reading in Reported Date as Date
-dfrki <- read.csv("Data/RKI_COVID19.csv",
+dfrki <- read.csv("C:/Users/alexa/Documents/Uni/RKI-COVID/RKI_COVID19.csv",
                   colClasses=c(
                     "IdBundesland" = "NULL", "Datenstand" = "NULL", 
                     "Meldedatum" = "Date", "IdLandkreis" = "character"
                   ))
 
-# Creating subsets for each month of the pandemic
-dfrki20.02 <- subset(dfrki, Meldedatum <= "2020-02-28")
-dfrki20.03 <- subset(dfrki, Meldedatum <= "2020-03-31" & Meldedatum > "2020-02-28")
-dfrki20.04 <- subset(dfrki, Meldedatum <= "2020-04-30" & Meldedatum > "2020-03-31")
-dfrki20.05 <- subset(dfrki, Meldedatum <= "2020-05-31" & Meldedatum > "2020-04-30")
-dfrki20.06 <- subset(dfrki, Meldedatum <= "2020-06-30" & Meldedatum > "2020-05-31")
-dfrki20.07 <- subset(dfrki, Meldedatum <= "2020-07-31" & Meldedatum > "2020-06-30")
-dfrki20.08 <- subset(dfrki, Meldedatum <= "2020-08-31" & Meldedatum > "2020-07-31")
-dfrki20.09 <- subset(dfrki, Meldedatum <= "2020-09-30" & Meldedatum > "2020-08-31")
-dfrki20.10 <- subset(dfrki, Meldedatum <= "2020-10-31" & Meldedatum > "2020-09-30")
-dfrki20.11 <- subset(dfrki, Meldedatum <= "2020-11-30" & Meldedatum > "2020-10-31")
-dfrki20.12 <- subset(dfrki, Meldedatum <= "2020-12-31" & Meldedatum > "2020-11-30")
-dfrki21.01 <- subset(dfrki, Meldedatum <= "2021-01-31" & Meldedatum > "2020-12-31")
-dfrki21.02 <- subset(dfrki, Meldedatum <= "2021-02-28" & Meldedatum > "2021-01-31")
-dfrki21.03 <- subset(dfrki, Meldedatum <= "2021-03-31" & Meldedatum > "2021-02-28")
-dfrki21.04 <- subset(dfrki, Meldedatum <= "2021-04-30" & Meldedatum > "2021-03-31")
-dfrki21.05 <- subset(dfrki, Meldedatum <= "2021-05-31" & Meldedatum > "2021-04-30")
-dfrki21.06 <- subset(dfrki, Meldedatum <= "2021-06-30" & Meldedatum > "2021-05-31")
+# How many people without known age? (Altersgruppe "unbekannt", age group "unknown")
+count(dfrki, Altersgruppe)
+  # > only 2103 unknown entries, in comparison to 2074321 known. 
+  # > multiple cases in one entry possible, but extremly scarce 
+  # > still, unknown age group is magnitudes below all other groups
+  # > thus, unknowns are ignored
+dfrki <- dfrki[!(dfrki$Altersgruppe=="unbekannt"),]
 
-# Aggregating cases and deaths for each quarter (as of now old package, still to change asap!)
+# Creating subsets for each month of the pandemic
+rkilist1 <- c("2020-01-01", "2020-02-28", "2020-03-31", "2020-04-30", "2020-05-31", 
+              "2020-06-30", "2020-07-31", "2020-08-31", "2020-09-30", "2020-10-31", 
+              "2020-11-30", "2020-12-31", "2021-01-31", "2021-02-28", "2021-03-31", 
+              "2021-04-30", "2021-05-31", "2021-06-30")
+rkilist2 <- c("20.02", "20.03", "20.04", "20.05", "20.06", 
+              "20.07", "20.08", "20.09", "20.10", "20.11",
+              "20.12", "21.01", "21.02", "21.03", "21.04", 
+              "21.05", "21.06")
+for (i in 1:17) {
+  a <- subset(dfrki, Meldedatum <= rkilist1[[i+1]] & Meldedatum > rkilist1[[i]])
+  assign(paste("dfrki",rkilist2[[i]],sep=""), a)
+}
+
+
+
+
+
+
+rkilist3 <- c("", "0004", "0514", "1534", "3559", "6079", "80")
+
+dfrki1 <- ddply(dfrki21.02, .(IdLandkreis, Altersgruppe), summarise, aggrCases=sum(AnzahlFall))
+dfrki1 <- reshape(dfrki1, idvar = "IdLandkreis", timevar = "Altersgruppe", direction = "wide")
+names(dfrki1)[names(dfrki1)=="IdLandkreis"] <- "KRS"
+namescol <- colnames(dfrki1)
+dfrki1[is.na(dfrki1)] <- 0
+dfrki2 <- dfrki1 %>% filter(
+  KRS == "11001"|KRS =="11002"|KRS =="11003"|KRS =="11004"|KRS =="11005"|KRS =="11006"|
+    KRS =="11007"|KRS =="11008"|KRS =="11009"|
+    KRS =="11010"|KRS =="11011"|KRS =="11012") 
+
+
+
+
+for(i in 2:ncol(dfrki1)){
+  names(dfrki1)[names(dfrki1)==namescol[[i]]] <- paste("case", rkilist3[[i]], sep="")
+}
+
+
+
+
+
+
+
+
+
+
+
+for(i in 2:ncol(dfrki1)){
+  zahl1 <- sum(dfrki2[,i])
+  zahl2 <- sum(dfrki2[,i])
+  neu<- cbind(zahl1,zahl2)
+  neu<- neu %>% mutate(KRS= "11000")
+  dfrki1<- rbind(dfrki1,neu)
+  names(dfrki1)[names(dfrki1)=="aggrCases"] <- paste("case", rkilist3[[i]], sep="")
+  names(dfrki1)[names(dfrki1)=="aggrDeaths"] <- paste("death", rkilist3[[i]], sep="")
+}
+
+
+dfrki1<- dfrki1 %>% filter (!(
+  KRS == "11001"|KRS =="11002"|KRS =="11003"|KRS =="11004"|KRS =="11005"|KRS =="11006"|
+    KRS =="11007"|KRS =="11008"|KRS =="11009"|
+    KRS =="11010"|KRS =="11011"|KRS =="11012")
+)
+
+
+
+
+
+dfrki1$cases <- as.numeric(apply(dfrki1[,2:ncol(dfrki1)], 1, sum))
+
+
+
+
+
+
+
+# a = output df
+# b = input df
+# d = varname cases
+# e = varname deaths
+
+aggregateTransform<- function(a,b,d,e){
+  a <- ddply(b, .(IdLandkreis, Altersgruppe), summarise, aggrCases=sum(AnzahlFall))
+  a <- reshape(a, idvar = "IdLandkreis", timevar = "Altersgruppe", direction = "wide")
+  a$cases <- as.numeric(apply(a[,2:ncol(a)], 1, sum))
+  c <- ddply(b, .(IdLandkreis, Altersgruppe), summarise, aggrDeaths=sum(AnzahlTodesfall))
+  c <- reshape(c, idvar = "IdLandkreis", timevar = "Altersgruppe", direction = "wide")
+  c$deaths <- as.numeric(apply(c[,2:ncol(c)], 1, sum))
+  a <- merge(a,c,by.x="IdLandkreis",by.y="IdLandkreis")
+  names(a)[names(a)=="IdLandkreis"] <- "KRS"
+  zahl1<- a %>% filter(
+    KRS == "11001"|KRS =="11002"|KRS =="11003"|KRS =="11004"|KRS =="11005"|KRS =="11006"|
+      KRS =="11007"|KRS =="11008"|KRS =="11009"|
+      KRS =="11010"|KRS =="11011"|KRS =="11012") %>% summarise(aggrCases=sum(aggrCases))
+  zahl2<- a %>% filter(
+    KRS == "11001"|KRS =="11002"|KRS =="11003"|KRS =="11004"|KRS =="11005"|KRS =="11006"|
+      KRS =="11007"|KRS =="11008"|KRS =="11009"|
+      KRS =="11010"|KRS =="11011"|KRS =="11012") %>% summarise(aggrDeaths=sum(aggrDeaths))
+  neu<- cbind(zahl1,zahl2)
+  neu<- neu %>% mutate(KRS= "11000")
+  a<- rbind(a,neu)
+  a<- a %>% filter (!(
+    KRS == "11001"|KRS =="11002"|KRS =="11003"|KRS =="11004"|KRS =="11005"|KRS =="11006"|
+      KRS =="11007"|KRS =="11008"|KRS =="11009"|
+      KRS =="11010"|KRS =="11011"|KRS =="11012")
+  )
+  as.character(d)
+  as.character(e)
+  names(a)[names(a)=="aggrCases"] <- d
+  names(a)[names(a)=="aggrDeaths"] <- e
+  a
+}
+
+
+
+
+
+
+# Aggregating cases and deaths for each quarter (as of now old package, still to change)
 # first aggregating cases and deaths
 # second merging them in a unified df
 # third creating df with aggregate Berlin cases/deaths with correct geographic reference
