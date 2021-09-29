@@ -11,8 +11,77 @@
 #                                                        #
 ##########################################################
 
+## In manipulation: 
+# Aggregate Transform
+# Aggregating cases and deaths for each month / age group + calculating EU stand. cases
+# first aggregating cases and deaths by age group
+# second merging them in a unified df 
+# third creating df with aggregate Berlin cases/deaths with correct geographic reference (KRS)
+# fourth adding new row with aggregate Berlin to aggregate df
+# fifth deleting rows with old Berlin data
+# sixth, giving unique names in order to later match
+# finally, calculating sums: one crude sum, one standardised EU sum, IR and CFR both with and without EU weights
+# NOTE: This function relies on rkilist3, which is created in "manipulation" and contains suffixes
+
+aggregateTransform <- function(dfoutput,dfinput,date){
+  dfoutput <- ddply(dfinput, .(IdLandkreis, Altersgruppe), summarise, cases=sum(AnzahlFall))
+  dfoutput <- reshape(dfoutput, idvar = "IdLandkreis", timevar = "Altersgruppe", direction = "wide")
+  dfdeaths <- ddply(dfinput, .(IdLandkreis, Altersgruppe), summarise, deaths=sum(AnzahlTodesfall))
+  dfdeaths <- reshape(dfdeaths, idvar = "IdLandkreis", timevar = "Altersgruppe", direction = "wide")
+  dfoutput <- merge(dfoutput, dfdeaths, by.dfmerge = IdLandkreis, by.dfdd = IdLandkreis)
+  names(dfoutput)[names(dfoutput)=="IdLandkreis"] <- "KRS"
+  namescol <- colnames(dfoutput)
+  dfoutput[is.na(dfoutput)] <- 0
+  dfberlin <- dfoutput %>% filter(
+    KRS == "11001"|KRS =="11002"|KRS =="11003"|KRS =="11004"|KRS =="11005"|KRS =="11006"|
+      KRS =="11007"|KRS =="11008"|KRS =="11009"|
+      KRS =="11010"|KRS =="11011"|KRS =="11012") 
+  dfoutput <- dfoutput[, c("KRS", sort(setdiff(names(dfoutput), "KRS")))]
+  for(i in 2:ncol(dfoutput)){
+    ifelse(str_detect(namescol[[i]], "^c"), 
+           names(dfoutput)[names(dfoutput)==namescol[[i]]] <- paste("cases", rkilist3[[i]], sep=""),
+           names(dfoutput)[names(dfoutput)==namescol[[i]]] <- paste("deaths", rkilist3[[i]], sep="")
+    ) 
+  }
+  dfberlin2 <- data.frame(KRS = "11000")
+  for(i in 2:ncol(dfoutput)){
+    a <- sum(dfberlin[,i])
+    dfberlin2 <- cbind(dfberlin2,a)
+    ifelse(str_detect(namescol[[i]], "^c"), 
+           names(dfberlin2)[names(dfberlin2)=="a"] <- paste("cases", rkilist3[[i]], sep=""),
+           names(dfberlin2)[names(dfberlin2)=="a"] <- paste("deaths", rkilist3[[i]], sep="")
+    ) 
+  }
+  dfoutput <- rbind(dfoutput,dfberlin2)
+  dfoutput<- dfoutput %>% filter (!(
+    KRS == "11001"|KRS =="11002"|KRS =="11003"|KRS =="11004"|KRS =="11005"|KRS =="11006"|
+      KRS =="11007"|KRS =="11008"|KRS =="11009"|
+      KRS =="11010"|KRS =="11011"|KRS =="11012")
+  )
+  dfoutput$cases <- as.numeric(apply(dfoutput[,2:7], 1, sum))
+  dfoutput$deaths <- as.numeric(apply(dfoutput[,8:13], 1, sum))
+  dfoutput <- merge(dfdd, dfoutput, by.dfdd = KRS, by.dfoutput = KRS, all = TRUE)
+  dfoutput$IR <- (dfoutput$cases / dfoutput$population) * 100000
+  dfoutput$IREU <- dfoutput$cases0004 * dfoutput$fy0004 + dfoutput$cases0514 * dfoutput$fy0514 +
+    dfoutput$cases1534 * dfoutput$fy1534 + dfoutput$cases3559 * dfoutput$fy3559 +
+    dfoutput$cases6079 * dfoutput$fy6079 + dfoutput$cases80 * dfoutput$fy80
+  dfoutput$CFR <- (dfoutput$deaths / dfoutput$cases)
+  dfoutput$deathsEU <- dfoutput$deaths0004 * dfoutput$fy0004 + dfoutput$deaths0514 * dfoutput$fy0514 +
+    dfoutput$deaths1534 * dfoutput$fy1534 + dfoutput$deaths3559 * dfoutput$fy3559 +
+    dfoutput$deaths6079 * dfoutput$fy6079 + dfoutput$deaths80 * dfoutput$fy80
+  dfoutput$CFREU <- (dfoutput$deathsEU / dfoutput$IREU)
+  dfoutput <- dfoutput[,c(1,53:59)]
+  colnames(dfoutput) <- paste(colnames(dfoutput), date, sep = "")
+  namescol <- colnames(dfoutput)
+  names(dfoutput)[names(dfoutput)==namescol[[1]]] <- "KRS"
+  dfoutput
+}
 
 
+
+
+
+## In analysis: 
 # OLS regress a var against a previously defined list of variables, output as df
 OLSvarlist <- function(var, varList){
   dfoutput <- data.frame()

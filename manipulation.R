@@ -203,6 +203,8 @@ rkilist2 <- c("20.02", "20.03", "20.04", "20.05", "20.06",
               "20.07", "20.08", "20.09", "20.10", "20.11",
               "20.12", "21.01", "21.02", "21.03", "21.04", 
               "21.05", "21.06")
+rkilist3 <- c("", "0004", "0514", "1534", "3559", "6079", "80", "0004", "0514", "1534", "3559", "6079", "80")
+
 for (i in 1:17) {
   a <- subset(dfrki, Meldedatum <= rkilist1[[i+1]] & Meldedatum > rkilist1[[i]])
   assign(paste("dfrki",rkilist2[[i]],sep=""), a)
@@ -210,145 +212,10 @@ for (i in 1:17) {
 
 
 
+dfrkiaggr21.05 <- aggregateTransform(dfrkiaggr21.05,dfrki21.05,"21.05")
 
 
 
-rkilist3 <- c("", "0004", "0514", "1534", "3559", "6079", "80")
-
-dfrki1 <- ddply(dfrki21.02, .(IdLandkreis, Altersgruppe), summarise, aggrCases=sum(AnzahlFall))
-dfrki1 <- reshape(dfrki1, idvar = "IdLandkreis", timevar = "Altersgruppe", direction = "wide")
-names(dfrki1)[names(dfrki1)=="IdLandkreis"] <- "KRS"
-namescol <- colnames(dfrki1)
-dfrki1[is.na(dfrki1)] <- 0
-dfrki2 <- dfrki1 %>% filter(
-  KRS == "11001"|KRS =="11002"|KRS =="11003"|KRS =="11004"|KRS =="11005"|KRS =="11006"|
-    KRS =="11007"|KRS =="11008"|KRS =="11009"|
-    KRS =="11010"|KRS =="11011"|KRS =="11012") 
-
-
-
-
-for(i in 2:ncol(dfrki1)){
-  names(dfrki1)[names(dfrki1)==namescol[[i]]] <- paste("case", rkilist3[[i]], sep="")
-}
-
-
-
-
-
-
-
-
-
-
-
-for(i in 2:ncol(dfrki1)){
-  zahl1 <- sum(dfrki2[,i])
-  zahl2 <- sum(dfrki2[,i])
-  neu<- cbind(zahl1,zahl2)
-  neu<- neu %>% mutate(KRS= "11000")
-  dfrki1<- rbind(dfrki1,neu)
-  names(dfrki1)[names(dfrki1)=="aggrCases"] <- paste("case", rkilist3[[i]], sep="")
-  names(dfrki1)[names(dfrki1)=="aggrDeaths"] <- paste("death", rkilist3[[i]], sep="")
-}
-
-
-dfrki1<- dfrki1 %>% filter (!(
-  KRS == "11001"|KRS =="11002"|KRS =="11003"|KRS =="11004"|KRS =="11005"|KRS =="11006"|
-    KRS =="11007"|KRS =="11008"|KRS =="11009"|
-    KRS =="11010"|KRS =="11011"|KRS =="11012")
-)
-
-
-
-
-
-dfrki1$cases <- as.numeric(apply(dfrki1[,2:ncol(dfrki1)], 1, sum))
-
-
-
-
-
-
-
-# a = output df
-# b = input df
-# d = varname cases
-# e = varname deaths
-
-aggregateTransform<- function(a,b,d,e){
-  a <- ddply(b, .(IdLandkreis, Altersgruppe), summarise, aggrCases=sum(AnzahlFall))
-  a <- reshape(a, idvar = "IdLandkreis", timevar = "Altersgruppe", direction = "wide")
-  a$cases <- as.numeric(apply(a[,2:ncol(a)], 1, sum))
-  c <- ddply(b, .(IdLandkreis, Altersgruppe), summarise, aggrDeaths=sum(AnzahlTodesfall))
-  c <- reshape(c, idvar = "IdLandkreis", timevar = "Altersgruppe", direction = "wide")
-  c$deaths <- as.numeric(apply(c[,2:ncol(c)], 1, sum))
-  a <- merge(a,c,by.x="IdLandkreis",by.y="IdLandkreis")
-  names(a)[names(a)=="IdLandkreis"] <- "KRS"
-  zahl1<- a %>% filter(
-    KRS == "11001"|KRS =="11002"|KRS =="11003"|KRS =="11004"|KRS =="11005"|KRS =="11006"|
-      KRS =="11007"|KRS =="11008"|KRS =="11009"|
-      KRS =="11010"|KRS =="11011"|KRS =="11012") %>% summarise(aggrCases=sum(aggrCases))
-  zahl2<- a %>% filter(
-    KRS == "11001"|KRS =="11002"|KRS =="11003"|KRS =="11004"|KRS =="11005"|KRS =="11006"|
-      KRS =="11007"|KRS =="11008"|KRS =="11009"|
-      KRS =="11010"|KRS =="11011"|KRS =="11012") %>% summarise(aggrDeaths=sum(aggrDeaths))
-  neu<- cbind(zahl1,zahl2)
-  neu<- neu %>% mutate(KRS= "11000")
-  a<- rbind(a,neu)
-  a<- a %>% filter (!(
-    KRS == "11001"|KRS =="11002"|KRS =="11003"|KRS =="11004"|KRS =="11005"|KRS =="11006"|
-      KRS =="11007"|KRS =="11008"|KRS =="11009"|
-      KRS =="11010"|KRS =="11011"|KRS =="11012")
-  )
-  as.character(d)
-  as.character(e)
-  names(a)[names(a)=="aggrCases"] <- d
-  names(a)[names(a)=="aggrDeaths"] <- e
-  a
-}
-
-
-
-
-
-
-# Aggregating cases and deaths for each quarter (as of now old package, still to change)
-# first aggregating cases and deaths
-# second merging them in a unified df
-# third creating df with aggregate Berlin cases/deaths with correct geographic reference
-# fourth adding new row with aggregate Berlin to aggregate df
-# fifth deleting rows with old Berlin data
-# finally, giving unique names in order to later match
-
-
-aggregateTransform<- function(a,b,d,e){
-  a <- ddply(b, .(IdLandkreis), summarise, aggrCases=sum(AnzahlFall))
-  c <- ddply(b, .(IdLandkreis), summarise, aggrDeaths=sum(AnzahlTodesfall))
-  a <- merge(a,c,by.x="IdLandkreis",by.y="IdLandkreis")
-  names(a)[names(a)=="IdLandkreis"] <- "KRS"
-  zahl1<- a %>% filter(
-    KRS == "11001"|KRS =="11002"|KRS =="11003"|KRS =="11004"|KRS =="11005"|KRS =="11006"|
-      KRS =="11007"|KRS =="11008"|KRS =="11009"|
-      KRS =="11010"|KRS =="11011"|KRS =="11012") %>% summarise(aggrCases=sum(aggrCases))
-  zahl2<- a %>% filter(
-    KRS == "11001"|KRS =="11002"|KRS =="11003"|KRS =="11004"|KRS =="11005"|KRS =="11006"|
-      KRS =="11007"|KRS =="11008"|KRS =="11009"|
-      KRS =="11010"|KRS =="11011"|KRS =="11012") %>% summarise(aggrDeaths=sum(aggrDeaths))
-  neu<- cbind(zahl1,zahl2)
-  neu<- neu %>% mutate(KRS= "11000")
-  a<- rbind(a,neu)
-  a<- a %>% filter (!(
-    KRS == "11001"|KRS =="11002"|KRS =="11003"|KRS =="11004"|KRS =="11005"|KRS =="11006"|
-      KRS =="11007"|KRS =="11008"|KRS =="11009"|
-      KRS =="11010"|KRS =="11011"|KRS =="11012")
-  )
-  as.character(d)
-  as.character(e)
-  names(a)[names(a)=="aggrCases"] <- d
-  names(a)[names(a)=="aggrDeaths"] <- e
-  a
-}
 
 dfrkiaggr20.02 <- aggregateTransform(dfrkiaggr20.02,dfrki20.02,"aggrCases20.02","aggrDeaths20.02")
 dfrkiaggr20.03 <- aggregateTransform(dfrkiaggr20.03,dfrki20.03,"aggrCases20.03","aggrDeaths20.03")
