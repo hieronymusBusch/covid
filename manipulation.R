@@ -19,7 +19,7 @@ library(plyr)
 library(stringr) 
 library(ggpubr)
 library(stargazer)
-library(spdep)
+library(spatialreg)
 
 # tidyverse
 library(dplyr)
