@@ -1,4 +1,4 @@
-############################################################
+##########################################################
 #                                                        #
 # BA Sociology:                                          #
 # "COVID-19 in Germany, a social-geographic perspective" #
@@ -12,17 +12,12 @@
 ##########################################################
 
 source("manipulation.R")
-source("functions.R")
 
 # Varlist for Models
 varlistLNIR <- c("LNIR20.02","LNIR20.03","LNIR20.04","LNIR20.05","LNIR20.06",
                  "LNIR20.07","LNIR20.08","LNIR20.09","LNIR20.10",
                  "LNIR20.11","LNIR20.12","LNIR21.01","LNIR21.02",
                  "LNIR21.03","LNIR21.04","LNIR21.05")
-varlistLNdeathRate <- c("LNdeathRate20.02","LNdeathRate20.03","LNdeathRate20.04","LNdeathRate20.05","LNdeathRate20.06",
-                        "LNdeathRate20.07","LNdeathRate20.08","LNdeathRate20.09","LNdeathRate20.10",
-                        "LNdeathRate20.11","LNdeathRate20.12","LNdeathRate21.01","LNdeathRate21.02",
-                        "LNdeathRate21.03","LNdeathRate21.04","LNdeathRate21.05")
 varlistCFR <- c("CFR20.02","CFR20.03","CFR20.04","CFR20.05","CFR20.06",
                 "CFR20.07","CFR20.08","CFR20.09","CFR20.10",
                 "CFR20.11","CFR20.12","CFR21.01","CFR21.02",
@@ -31,13 +26,11 @@ varlistCFRlag <- c("CFRlag20.04","CFRlag20.05","CFRlag20.06",
                    "CFRlag20.07","CFRlag20.08","CFRlag20.09","CFRlag20.10",
                    "CFRlag20.11","CFRlag20.12","CFRlag21.01","CFRlag21.02",
                    "CFRlag21.03","CFRlag21.04","CFRlag21.05")
-varlistControl <- c("shareWomen","age18.24","age25.29","age30.49","age50.64","age65.74","age75.84","age85")
-varlistControlStates <- c("shareWomen","age18.24","age25.29","age30.49","age50.64","age65.74","age75.84","age85",
-                          "SH","HH","NI","HB","MV","BB","BE","ST","SN","TH","NW","HE","RP","BY","SL")
-varlistControlForeign <- c("GISD","shareForeign","shareWomen","age18.24","age25.29","age30.49","age50.64","age65.74","age75.84","age85")
-varlistControlEast <- c("GISD","east","shareWomen","age18.24","age25.29","age30.49","age50.64","age65.74","age75.84","age85")
-varlistControlForeign2 <- c("GISD","shareWomen","age18.24","age25.29","age30.49","age50.64","age65.74","age75.84","age85")
-varlistControlEast2 <- c("GISD","shareWomen","age18.24","age25.29","age30.49","age50.64","age65.74","age75.84","age85")
+varlistControlStates <- c("SH","HH","NI","HB","MV","BB","BE","ST","SN","TH","NW","HE","RP","BY","SL")
+varlistControlForeign <- c("GISD","shareForeign","shareWomen")
+varlistControlEast <- c("GISD","east","shareWomen")
+varlistControlForeign2 <- c("GISD","shareWomen")
+varlistControlEast2 <- c("GISD","shareWomen")
 month <- c("02/20","03/20","04/20","05/20","06/20","07/20","08/20","09/20","10/20",
            "11/20","12/20","01/21","02/21","03/21","04/21","05/21")
 
@@ -46,18 +39,26 @@ neighbors <- poly2nb(dfds)
 weighted_neighbors <- nb2listw(neighbors, zero.policy=T)
 weighted_neighbors
 
+
+
+
+
+
 ### Analysis
 
 ## Test for spatial Autocorrelation in data
-moran.test(dfds$IR, weighted_neighbors, zero.policy=T)
-moran.test(dfds$IR20.04, weighted_neighbors, zero.policy=T)
-moran.test(dfds$IR21.04, weighted_neighbors, zero.policy=T)
-moran.plot(dfds$IR, weighted_neighbors, zero.policy=T,xlab="IR", ylab="spatially lagged IR")
+moran.test(dfds$IREU, weighted_neighbors, zero.policy=T)
+moran.test(dfds$IREU20.04, weighted_neighbors, zero.policy=T)
+moran.test(dfds$IREU21.04, weighted_neighbors, zero.policy=T)
+moran.plot(dfds$IREU, weighted_neighbors, zero.policy=T,xlab="Incidence Rates", ylab="spatially lagged IR")
 
-moran.test(dfds$CFR, weighted_neighbors, zero.policy=T)
-moran.test(dfds$CFR20.04, weighted_neighbors, zero.policy=T)
-moran.test(dfds$CFR21.04, weighted_neighbors, zero.policy=T)
-moran.plot(dfds$CFR, weighted_neighbors, zero.policy=T)
+moran.test(dfds$CFREU, weighted_neighbors, zero.policy=T)
+moran.test(dfds$CFREU20.04, weighted_neighbors, zero.policy=T)
+moran.test(dfds$CFREU21.04, weighted_neighbors, zero.policy=T)
+moran.plot(dfds$CFREU, weighted_neighbors, zero.policy=T)
+moran.plot(dfds$CFREU21.04, weighted_neighbors, zero.policy=T,xlab="Case fatality ratio", ylab="spatially lagged CFR")
+
+
 
 ## Hypothesis I, IR ~ GISD
 dfIR.GISD <- SARvarlist2("GISD",varlistLNIR, varlistControl)
@@ -105,40 +106,6 @@ displayCoeff(dfCFR.workersAcadem,"CFR ~ Workers Academic Education, Regression C
 dfCFR.workersAcadem
 
 
-## Hypothesis II.1, Effect on Hypothesis I of foreigners
-dfIR.foreign <- SARvarlist3("shareForeign","GISD",varlistLNIR,varlistControl)
-displayCoeff(dfIR.foreign,"LN IR ~ Share Foreigners (+GISD), Average Total Effects (SAR)", "Average Total Effect")
-dfIR.foreign
-
-stargazer(dfIR.foreign, summary = FALSE, type = "latex")
-
-
-dfCFR.foreign <- OLSvarlist3("shareForeign","GISD",varlistLNIR, varlistControl)
-displayCoeff(dfCFR.foreign,"CFR ~ Share Foreigners (+GISD), Regression Coefficients (OLS)", "Regression Coefficient")
-dfCFR.foreign
-
-stargazer(dfCFR.foreign, summary = FALSE, type = "latex")
-
-
-## Hypothesis II.2, Effect on Hypothesis I of east-west
-dfIR.east <- SARvarlist3("GISD","east",varlistLNIR, varlistControl)
-displayCoeff(dfIR.east,"LN IR ~ East (+GISD), Average Total Effects (SAR)", "Average Total Effect")
-dfIR.east
-
-stargazer(dfIR.east, summary = FALSE, type = "latex")
-
-dfCFR.east <- OLSvarlist3("GISD","east",varlistLNIR, varlistControl)
-displayCoeff(dfCFR.east,"CFR ~ East (+GISD), Regression Coefficients (OLS)", "Regression Coefficient")
-dfCFR.east
-
-stargazer(dfCFR.east, summary = FALSE, type = "latex")
-
-
-## Hypothesis E1, IR ~ AfD
-dfIR.AfD <- SARvarlist2("AfD",varlistLNIR, varlistControl)
-displayCoeff(dfIR.AfD,"AfD vote (2017)", "Average Total Effect")
-dfIR.AfD
-
 ## Hypothesis E2, CFR ~ Healthcare facilities
 dfCFR.popPerDoc <- OLSvarlist2("LNpopPerDoc",varlistCFR, varlistControl)
 displayCoeff(dfCFR.popPerDoc,"CFR ~ LN People per Doctor, Regression Coefficient (OLS)", "Regression Coefficient")
@@ -173,11 +140,8 @@ shapiro.test(dfdd$IR)
 
 plot(dfdd$GISD,dfdd$IR)
 
-plot(dfdd$AfD,dfdd$IR)
 
-plot(dfdd$shareForeigners,dfdd$IR)
 
-plot(dfdd$above65,dfdd$deathRate)
 
 
 ### Tables etc. for LaTeX Output
@@ -188,12 +152,6 @@ stargazer(dfdd[c("GISD","unemployment","medInc","workersAcadem","popDensity",
                  "AfD","hospBeds","popPerDoc")], 
           type = "latex", digits=1,flip = FALSE, omit.summary.stat = 
             c("p25","p75"))
-
-# table with dependent variables SHORT
-stargazer(dfdd[c("CFR","IR","aggrCases","aggrDeaths","CFR20.04","CFR21.04","IR20.04",
-                 "IR21.04")], 
-          type = "latex", digits=1,flip = FALSE, omit.summary.stat = 
-            c("median","p25","p75"))
 
 # table with dependent variables LONG
 stargazer(dfdd[c("CFR","IR","aggrCases","aggrDeaths","CFR20.02",
@@ -228,12 +186,8 @@ effects_LNIR.GISD[["LNIR21.04"]]
 effects_LNIR.GISD[["LNIR21.05"]]
 
 #Maps
-plot(dfds["IR"], key.pos = 4, nbreaks = 10,border="white")
-plot(dfds["IR20.04"], key.pos = 4, nbreaks = 10,border="white")
-plot(dfds["IR21.04"], key.pos = 4, nbreaks = 10,border="white")
-plot(dfds["CFR"], key.pos = 4, nbreaks = 10,border="white")
-plot(dfds["CFR20.04"], key.pos = 4, nbreaks = 10,border="white")
-plot(dfds["CFR21.04"], key.pos = 4, nbreaks = 10,border="white")
+plot(dfds["IREU"], key.pos = 4, nbreaks = 10,border="white")
+plot(dfds["CFREU"], key.pos = 4, nbreaks = 10,border="white")
 plot(dfds["GISD"], key.pos = 4, nbreaks = 10,border="white")
 
 #Course of Pandemic in Germany
