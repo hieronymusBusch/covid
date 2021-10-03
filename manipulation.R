@@ -19,12 +19,15 @@ library(plyr)
 library(stringr) 
 library(ggpubr)
 library(stargazer)
+library(spdep)
 library(spatialreg)
 
 # tidyverse
 library(dplyr)
 library(ggplot2)
 library(purrr)
+
+library(ggthemes)
 
 # disable scientific notation (1.25e+2 => 125)
 options(scipen = 99)  
@@ -314,6 +317,7 @@ dfdd$LNIREU21.05 <- log(dfdd$IREU21.05)
 dfdd$LNIREU21.06 <- log(dfdd$IREU21.06)
 dfdd$LNIREU <- log(dfdd$IREU)
 
+dfdd$LNhhInc <- log(dfdd$hhInc)
 dfdd$LNmedInc <- log(dfdd$medInc)
 dfdd$LNpopPerDoc <- log(dfdd$popPerDoc)
 dfdd$GISDforeign <- dfdd$GISD * dfdd$shareForeign
@@ -326,9 +330,7 @@ dfdd[dfdd < -10000] <- -2.3
 dfds <- merge(dfds, dfdd, by.dfds = NUTS_CODE, by.dfdd = NUTS_CODE)
 
 dfds$NUTS_NAME <- NULL
-dfds$name <- NULL
-dfdd$name <- NULL
-dfdd[,34:39] <- NULL # EU weights
-dfds[,34:39] <- NULL # EU weights
+dfdd[,c("fy0004", "fy0514", "fy1534", "fy3559", "fy6079", "fy80")] <- NULL # EU weights
+dfds[,c("fy0004", "fy0514", "fy1534", "fy3559", "fy6079", "fy80")] <- NULL # EU weights
 
 

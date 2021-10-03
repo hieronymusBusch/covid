@@ -1,7 +1,7 @@
 ##########################################################
 #                                                        #
 # BA Sociology:                                          #
-# "COVID-19 in Germany, a social-geographic perspective" #
+# "COVID-19 in Germany, a socio-geographic perspective"  #
 #                                                        #
 # 2021/04                                                #
 #                                                        #
@@ -87,6 +87,7 @@ aggregateTransform <- function(dfoutput,dfinput,date){
 
 
 ## In analysis: 
+# these function rely on the month-list specified in the analysis
 # OLS regress a var against a previously defined list of variables, output as df
 OLSvarlist <- function(var, varList){
   dfoutput <- data.frame()
@@ -98,8 +99,40 @@ OLSvarlist <- function(var, varList){
     c <- data.frame(coefficientReg = b[2, 1])
     dfoutput <- rbind(dfoutput,c)
   }
-  dfoutput$month <- c("02/20","03/20","04/20","05/20","06/20","07/20","08/20","09/20","10/20",
-                      "11/20","12/20","01/21","02/21","03/21","04/21","05/21","06/21")
+  dfoutput$month <- month
+  dfoutput$coefficientReg <- round(dfoutput$coefficientReg, digits = 10)
+  dfoutput
+}
+
+# OLS regress as above, but with controllist
+OLSvarlistC <- function(var, varList, controlList){
+  dfoutput <- data.frame()
+  for(a in varList) {
+    inputvar1 <- a
+    input2 <- c(var,controlList)
+    f <- as.formula(paste(inputvar1,paste(input2, collapse = " + "), sep = "~"))
+    b <- summary(lm(f,dfdd,na.action=na.omit))$coefficients
+    c <- data.frame(coefficientReg = b[2, 1])
+    dfoutput <- rbind(dfoutput,c)
+  }
+  dfoutput$month <- month
+  dfoutput$coefficientReg <- round(dfoutput$coefficientReg, digits = 10)
+  dfoutput
+}
+
+# OLS varlist for lagged (without feb and mar)
+OLSvarlistLAG <- function(var, varList){
+  dfoutput <- data.frame()
+  for(a in varList) {
+    inputvar1 <- a
+    inputvar2 <- var
+    f <- as.formula(paste(inputvar1,paste(inputvar2, collapse = " + "), sep = "~"))
+    b <- summary(lm(f,dfdd,na.action=na.omit))$coefficients
+    c <- data.frame(coefficientReg = b[2, 1])
+    dfoutput <- rbind(dfoutput,c)
+  }
+  dfoutput$month <- c("20-04", "20-05", "20-06", "20-07", "20-08", "20-09", 
+                       "20-10", "20-11", "20-12", "21-01", "21-02", "21-03", "21-04", "21-05", "21-06")
   dfoutput$coefficientReg <- round(dfoutput$coefficientReg, digits = 10)
   dfoutput
 }
@@ -115,8 +148,7 @@ OLSvarlist2 <- function(var, varList, controlList){
     c <- data.frame(coefficientReg = b[2, 1])
     dfoutput <- rbind(dfoutput,c)
   }
-  dfoutput$month <- c("02/20","03/20","04/20","05/20","06/20","07/20","08/20","09/20","10/20",
-                      "11/20","12/20","01/21","02/21","03/21","04/21","05/21","06/21")
+  dfoutput$month <- month
   dfoutput$coefficientReg <- round(dfoutput$coefficientReg, digits = 10)
   dfoutput
 }
@@ -138,8 +170,7 @@ OLSvarlist3 <- function(var1, var2, varList, controlList){
     dfoutput1 <- rbind(dfoutput1,c)
     dfoutput2 <- rbind(dfoutput2,d)
   }
-  m <- data.frame(month = c("02/20","03/20","04/20","05/20","06/20","07/20","08/20","09/20","10/20",
-                            "11/20","12/20","01/21","02/21","03/21","04/21","05/21","06/21"))
+  m <- data.frame(month = month)
   dfoutput <- rbind(dfoutput,m)
   dfoutput$coefficientReg <- round(dfoutput1$coefficientReg, digits = 5)
   dfoutput$coefficientReg2 <- round(dfoutput2$coefficientReg2, digits = 5)
@@ -158,8 +189,7 @@ OLSvarlist4 <- function(var, varList, controlList){
     c <- data.frame(coefficientReg = b[2, 1])
     dfoutput <- rbind(dfoutput,c)
   }
-  dfoutput$month <- c("04/20","05/20","06/20","07/20","08/20","09/20","10/20",
-                      "11/20","12/20","01/21","02/21","03/21","04/21","05/21","06/21")
+  dfoutput$month <- month
   dfoutput$coefficientReg <- round(dfoutput$coefficientReg, digits = 10)
   dfoutput
 }
@@ -177,11 +207,67 @@ SARvarlist <- function(var, varList){
     c <- data.frame(coefficientReg = as.numeric(b[3]))
     dfoutput <- rbind(dfoutput,c)
   }
-  dfoutput$month <- c("02/20","03/20","04/20","05/20","06/20","07/20","08/20","09/20","10/20",
-                      "11/20","12/20","01/21","02/21","03/21","04/21","05/21","06/21")
+  dfoutput$month <- month
   dfoutput$coefficientReg <- round(dfoutput$coefficientReg, digits = 10)
   dfoutput
 }
+
+# SAR regress as above, but with controls
+SARvarlistC <- function(var, varList, controlList){
+  dfoutput <- data.frame()
+  input2 <- c(var,controlList)
+  for(a in varList) {
+    inputvar1 <- a
+    f <- as.formula(paste(inputvar1,paste(input2, collapse = " + "), sep = "~"))
+    lag = lagsarlm(f, data=dfds, listw = weighted_neighbors,
+                   tol.solve=1.0e-30, zero.policy=T)
+    b <- impacts(lag, listw = weighted_neighbors)
+    b <- unlist(b)
+    c <- data.frame(coefficientReg = as.numeric(b["total1"]))
+    dfoutput <- rbind(dfoutput,c)
+  }
+  dfoutput$month <- month
+  dfoutput$coefficientReg <- round(dfoutput$coefficientReg, digits = 10)
+  dfoutput
+}
+
+# Controls for path dependency (previous var in the varList)
+SARvarlistPath <- function(var, varList){
+  dfoutput <- data.frame()
+  for(a in 2:length(varList)) {
+    inputvar1 <- a
+    inputvar2 <- var
+    f <- as.formula(paste(inputvar1,paste(inputvar2, collapse = " + "), sep = "~"))
+    lag = lagsarlm(f, data=dfds, listw = weighted_neighbors,
+                   tol.solve=1.0e-30, zero.policy=T)
+    b <- impacts(lag, listw = weighted_neighbors)
+    c <- data.frame(coefficientReg = as.numeric(b[3]))
+    dfoutput <- rbind(dfoutput,c)
+  }
+  dfoutput$month <- month
+  dfoutput$coefficientReg <- round(dfoutput$coefficientReg, digits = 10)
+  dfoutput
+}
+
+# SAR lag for lagged (without feb and mar)
+SARvarlistLAG <- function(var, varList){
+  dfoutput <- data.frame()
+  for(a in varList) {
+    inputvar1 <- a
+    inputvar2 <- var
+    f <- as.formula(paste(inputvar1,paste(inputvar2, collapse = " + "), sep = "~"))
+    lag = lagsarlm(f, data=dfds, listw = weighted_neighbors,
+                   tol.solve=1.0e-30, zero.policy=T)
+    b <- impacts(lag, listw = weighted_neighbors)
+    c <- data.frame(coefficientReg = as.numeric(b[3]))
+    dfoutput <- rbind(dfoutput,c)
+  }
+  dfoutput$month <- c("20-04", "20-05", "20-06", "20-07", "20-08", "20-09", 
+                      "20-10", "20-11", "20-12", "21-01", "21-02", "21-03", "21-04", "21-05", "21-06")
+  dfoutput$coefficientReg <- round(dfoutput$coefficientReg, digits = 10)
+  dfoutput
+}
+
 
 # SAR regress a var against a previously defined list of variables, output as df of avg total effects & rho, including controls
 SARvarlist2 <- function(var, varList, controlList){
@@ -201,8 +287,7 @@ SARvarlist2 <- function(var, varList, controlList){
     dfoutput2 <- rbind(dfoutput2,d)
   }
   dfoutput$rho <- dfoutput2$rho
-  dfoutput$month <- c("02/20","03/20","04/20","05/20","06/20","07/20","08/20","09/20","10/20",
-                      "11/20","12/20","01/21","02/21","03/21","04/21","05/21","06/21")
+  dfoutput$month <- month
   dfoutput$coefficientReg <- round(dfoutput$coefficientReg, digits = 10)
   dfoutput
 }
@@ -230,8 +315,7 @@ SARvarlist3 <- function(var1, var2, varList, controlList){
     g <- data.frame(rho = as.numeric(summary(lag)$rho))
     dfoutput2 <- rbind(dfoutput2,g)
   }
-  m <- data.frame(month = c("02/20","03/20","04/20","05/20","06/20","07/20","08/20","09/20","10/20",
-                            "11/20","12/20","01/21","02/21","03/21","04/21","05/21","06/21"))
+  m <- data.frame(month = month)
   dfoutput <- rbind(dfoutput,m)
   dfoutput$coefficientReg <- round(dfoutput1$coefficientReg, digits = 5)
   dfoutput$coefficientReg2 <- round(dfoutput3$coefficientReg2, digits = 5)
