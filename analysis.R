@@ -1,11 +1,9 @@
 ##########################################################
 #                                                        #
-# BA Sociology:                                          #
-# "COVID-19 in Germany, a socioeconomic-geographic perspective" #
 #                                                        #
-# 2021/04                                                #
+# 2021/10                                                #
 #                                                        #
-# Alexander Busch (alexander.busch@stud.uni-hd.de)       #
+# Alexander Busch (a.busch@lse.ac.uk)                    #
 #                                                        #
 # Data Analysis                                          #
 #                                                        #
@@ -42,8 +40,10 @@ varlistCFREUlag <- c("CFREUlag20.04","CFREUlag20.05","CFREUlag20.06",
                    "CFREUlag20.07","CFREUlag20.08","CFREUlag20.09","CFREUlag20.10",
                    "CFREUlag20.11","CFREUlag20.12","CFREUlag21.01","CFREUlag21.02",
                    "CFREUlag21.03","CFREUlag21.04","CFREUlag21.05","CFREUlag21.06")
-varlistControl <- c("popDensity","SH","HH","NI","HB","MV","BB","BE","ST","SN","TH","NW","HE","RP","BY","SL")
-varlistControl2 <- c("SH","HH","NI","HB","MV","BB","BE","ST","SN","TH","NW","HE","RP","BY","SL")
+varlistControl <- c("LNpopDensity","SH","HH","NI","HB","MV","BB","BE","ST","SN","TH","NW","HE","RP","BY","SL")
+varlistStates <- c("SH","HH","NI","HB","MV","BB","BE","ST","SN","TH","NW","HE","RP","BY","SL")
+varlistControl3 <- c("LNpopDensity","relCath","SH","HH","NI","HB","MV","BB","BE","ST","SN","TH","NW","HE","RP","BY","SL")
+
 
 month <- c("20-02", "20-03", "20-04", "20-05", "20-06", "20-07", "20-08", "20-09", 
            "20-10", "20-11", "20-12", "21-01", "21-02", "21-03", "21-04", "21-05", "21-06")
@@ -54,10 +54,6 @@ weighted_neighbors <- nb2listw(neighbors, zero.policy=T)
 weighted_neighbors
 
 
-
-
-
-
 ### Analysis
 
 ## Test for spatial Autocorrelation in data
@@ -65,41 +61,66 @@ moran.test(dfds$IREU, weighted_neighbors, zero.policy=T)
 moran.test(dfds$IREU20.04, weighted_neighbors, zero.policy=T)
 moran.test(dfds$IREU21.04, weighted_neighbors, zero.policy=T)
 moran.plot(dfds$IREU, weighted_neighbors, zero.policy=T,xlab="incidence rates, age standardised", ylab="spatially lagged IR")
-
-moran.test(dfds$CFREU, weighted_neighbors, zero.policy=T)
-moran.test(dfds$CFREU20.04, weighted_neighbors, zero.policy=T)
-moran.test(dfds$CFREU21.04, weighted_neighbors, zero.policy=T)
-moran.plot(dfds$CFREU, weighted_neighbors, zero.policy=T)
-moran.plot(dfds$CFREU21.04, weighted_neighbors, zero.policy=T,xlab="case fatality ratios, age standardised", ylab="spatially lagged CFR")
-
+moran.plot(dfds$IREU20.04, weighted_neighbors, zero.policy=T,xlab="incidence rates, age standardised", ylab="spatially lagged IR")
+moran.plot(dfds$IREU21.04, weighted_neighbors, zero.policy=T,xlab="incidence rates, age standardised", ylab="spatially lagged IR")
 
 ## Hypothesis I, IR ~ GISD
-dfIREU <- SARvarlistC("GISD",varlistLNIREU,varlistControl)
-names(dfIREU)[names(dfIREU)=="coefficientReg"] <- "SAR, age standardised"
-dfIR2 <- SARvarlistC("GISD",varlistLNIR,varlistControl)
-names(dfIR2)[names(dfIR2)=="coefficientReg"] <- "SAR, not age standardised"
-dfIREUOLS <- OLSvarlistC("GISD",varlistLNIREU,varlistControl)
-names(dfIREUOLS)[names(dfIREUOLS)=="coefficientReg"] <- "Lin. Reg., age standardised"
+listIRGISD1 <- SARvarlistM("GISD",varlistLNIREU,varlistControl)
+dfIRGISD1 <- as.data.frame(listIRGISD1[1:2])
+modelsIRGISD1 <- listIRGISD1[3:19]
+names(dfIRGISD1)[names(dfIRGISD1)=="coefficientReg"] <- "SAR, age standardised"
 
-dfIR <- merge(dfIREU, dfIR2, by.dfIREU = month, by.dfIR2 = month)
-dfIR <- merge(dfIR, dfIREUOLS, by.dfIR = month, by.dfIREUOLS = month)
-dfIR <- reshape(dfIR, times = c("SAR, age standardised", "SAR, not age standardised", 
+listIRGISD2 <- SARvarlistM("GISD",varlistLNIR,varlistControl)
+dfIRGISD2 <- as.data.frame(listIRGISD2[1:2])
+modelsIRGISD2 <- listIRGISD2[3:19]
+names(dfIRGISD2)[names(dfIRGISD2)=="coefficientReg"] <- "SAR, not age standardised"
+
+listIRGISD3 <- OLSvarlistM("GISD",varlistLNIREU,varlistControl)
+dfIRGISD3 <- as.data.frame(listIRGISD3[1:2])
+modelsIRGISD3 <- listIRGISD3[3:19]
+names(dfIRGISD3)[names(dfIRGISD3)=="coefficientReg"] <- "Lin. Reg., age standardised"
+
+dfIRGISD <- merge(dfIRGISD1, dfIRGISD2, by.dfIRGISD1 = month, by.dfIRGISD2 = month)
+dfIRGISD <- merge(dfIRGISD, dfIRGISD3, by.dfIRGISD = month, by.dfIRGISD3 = month)
+dfIRGISD <- reshape(dfIRGISD, times = c("SAR, age standardised", "SAR, not age standardised", 
                                 "Lin. Reg., age standardised"), 
                 varying = c("SAR, age standardised", "SAR, not age standardised", 
                             "Lin. Reg., age standardised"),  
                 idvar = "month", v.name="coefficients", direction = "long")
-names(dfIR)[names(dfIR)=="time"] <- "model"
+names(dfIRGISD)[names(dfIRGISD)=="time"] <- "model"
+# define labels to skip every second month in axis (every second label empty)
+xlabels <- sort(unique(dfIRGISD$month))
+xlabels[seq(2, length(xlabels), 2)] <- ""
 
 
-ggplot(dfIR, aes(x=month, y=coefficients, group = model, color = model)) +
-  geom_line(size = 0.8) +
+ggplot(dfIRGISD, aes(x=month, y=coefficients, group = model, color = model)) +
+  geom_line(size = 1) +
   geom_hline(aes(yintercept = 0)) +
+  scale_x_discrete(labels = xlabels) +
   labs(title="Effect size comparision",x="Month", y = "Coefficients", 
        subtitle = "log. Incidence Rates ~ German Index of socioeconomic Deprivation + pop. Density + state dummies", 
        caption = "Read: ''The most socioeconomicly deprived
                   county has a 1.5% higher incidence rate compared
                  to the least socioeconomicly deprived county as of March 21''")+
   theme_bw()
+
+# latex output
+stargazer(modelsIRGISD1[1:6], type = "latex", omit = varlistStates,
+          omit.stat=c("f", "ser"), align=TRUE,digits=1)
+stargazer(modelsIRGISD1[7:12], type = "latex", omit = varlistStates,
+          omit.stat=c("f", "ser"), align=TRUE,digits=1)
+stargazer(modelsIRGISD1[13:17], type = "latex", omit = varlistStates,
+          omit.stat=c("f", "ser"), align=TRUE,digits=1)
+
+stargazer(modelsIRGISD3[1:6], type = "latex", omit = varlistStates,
+          omit.stat=c("f", "ser"), align=TRUE,digits=1)
+stargazer(modelsIRGISD3[7:12], type = "latex", omit = varlistStates,
+          omit.stat=c("f", "ser"), align=TRUE,digits=1)
+stargazer(modelsIRGISD3[13:17], type = "latex", omit = varlistStates,
+          omit.stat=c("f", "ser"), align=TRUE,digits=1)
+
+
+
 
 ## Hypothesis I, IR ~ unemployment
 dfIREUu <- SARvarlistC("unemployment",varlistLNIREU,varlistControl)
@@ -117,10 +138,13 @@ dfIRu <- reshape(dfIRu, times = c("SAR, age standardised", "SAR, not age standar
                             "Lin. Reg., age standardised"),  
                 idvar = "month", v.name="coefficients", direction = "long")
 names(dfIRu)[names(dfIRu)=="time"] <- "model"
+xlabels <- sort(unique(dfIREUu$month))
+xlabels[seq(2, length(xlabels), 2)] <- ""
 
 ggplot(dfIRu, aes(x=month, y=coefficients, group = model, color = model)) +
-  geom_line(size = 0.8) +
+  geom_line(size = 1) +
   geom_hline(aes(yintercept = 0)) +
+  scale_x_discrete(labels = xlabels) +
   labs(title="Effect size comparision",x="Month", y = "Coefficients", 
        subtitle = "log. Incidence Rates ~ unemployment + pop. Density + state dummies", 
        caption = "Read: ''In the SAR models, a 1 percent point increase in the unemployment rate
@@ -145,10 +169,13 @@ dfIRe <- reshape(dfIRe, times = c("SAR, age standardised", "SAR, not age standar
                              "Lin. Reg., age standardised"),  
                  idvar = "month", v.name="coefficients", direction = "long")
 names(dfIRe)[names(dfIRe)=="time"] <- "model"
+xlabels <- sort(unique(dfIRe$month))
+xlabels[seq(2, length(xlabels), 2)] <- ""
 
 ggplot(dfIRe, aes(x=month, y=coefficients, group = model, color = model)) +
-  geom_line(size = 0.8) +
+  geom_line(size = 1) +
   geom_hline(aes(yintercept = 0)) +
+  scale_x_discrete(labels = xlabels) +
   labs(title="Effect size comparision",x="Month", y = "Coefficients", 
        subtitle = "log. Incidence Rates ~ workers with college education + pop. Density + state dummies", 
        caption = "Read: ''In the SAR models, a 1 percentage point increase in workers 
@@ -172,10 +199,14 @@ dfIRi <- reshape(dfIRi, times = c("SAR, age standardised", "SAR, not age standar
                              "Lin. Reg., age standardised"),  
                  idvar = "month", v.name="coefficients", direction = "long")
 names(dfIRi)[names(dfIRi)=="time"] <- "model"
+xlabels <- sort(unique(dfIRi$month))
+xlabels[seq(2, length(xlabels), 2)] <- ""
 
 ggplot(dfIRi, aes(x=month, y=coefficients, group = model, color = model)) +
   geom_line(size = 0.8) +
   geom_hline(aes(yintercept = 0)) +
+  geom_hline(aes(yintercept = 0)) +
+  scale_x_discrete(labels = xlabels) +
   labs(title="Effect size comparision",x="Month", y = "Coefficients", 
        subtitle = "log. Incidence Rates ~ log. median income + pop. Density + state dummies", 
        caption = "Read: ''In the SAR models, a 1% increase in the county median wage
@@ -184,130 +215,19 @@ ggplot(dfIRi, aes(x=month, y=coefficients, group = model, color = model)) +
   theme_bw()
 
 
-
-
-
-## Hypothesis I, CFR ~ GISD
-dfCFREU <- SARvarlist("GISD",varlistCFREU)
-names(dfCFREU)[names(dfCFREU)=="coefficientReg"] <- "SAR, age standardised"
-dfCFR <- SARvarlist("GISD",varlistCFR)
-names(dfCFR)[names(dfCFR)=="coefficientReg"] <- "SAR, not age standardised"
-dfCFREUOLS <- OLSvarlist("GISD",varlistCFREU)
-names(dfCFREUOLS)[names(dfCFREUOLS)=="coefficientReg"] <- "Lin. Reg., age standardised"
-
-dfCFR <- merge(dfCFREU, dfCFR, by.dfCFREU = month, by.dfCFR = month)
-dfCFR <- merge(dfCFR, dfCFREUOLS, by.dfCFR = month, by.dfCFREUOLS = month)
-dfCFR <- reshape(dfCFR, times = c("SAR, age standardised", "SAR, not age standardised", 
-                                  "Lin. Reg., age standardised"), 
-                 varying = c("SAR, age standardised", "SAR, not age standardised", 
-                             "Lin. Reg., age standardised"), 
-                 idvar = "month", v.name="coefficients", direction = "long")
-names(dfCFR)[names(dfCFR)=="time"] <- "model"
-
-ggplot(dfCFR, aes(x=month, y=coefficients, group = model, color = model)) +
-  geom_line(size = 0.8) +
-  geom_hline(aes(yintercept = 0)) +
-  labs(title="Effect size comparision",x="Month", y = "Coefficients", 
-       subtitle = "case fatality ratio ~ German Index of Socioeconomic Deprivation", 
-       caption = "Read: ''In the age standardised models, the most socioeconomicly deprived
-                  county has a 2 percentage points higher case fatality ratio compared
-                  to the least socioeconomicly deprived county as of March 21''" )+
-  theme_bw()
-
-## Hypothesis I, CFR ~ unemployment
-dfCFREUu <- SARvarlist("unemployment",varlistCFREU)
-names(dfCFREUu)[names(dfCFREUu)=="coefficientReg"] <- "SAR, age standardised"
-dfCFRu <- SARvarlist("unemployment",varlistCFR)
-names(dfCFRu)[names(dfCFRu)=="coefficientReg"] <- "SAR, not age standardised"
-dfCFREUOLSu <- OLSvarlist("unemployment",varlistCFREU)
-names(dfCFREUOLSu)[names(dfCFREUOLSu)=="coefficientReg"] <- "Lin. Reg., age standardised"
-
-dfCFRu <- merge(dfCFREUu, dfCFRu, by.dfCFREUu = month, by.dfCFRu = month)
-dfCFRu <- merge(dfCFRu, dfCFREUOLSu, by.dfCFRu = month, by.dfCFREUOLSu = month)
-dfCFRu <- reshape(dfCFRu, times = c("SAR, age standardised", "SAR, not age standardised", 
-                                  "Lin. Reg., age standardised"), 
-                 varying = c("SAR, age standardised", "SAR, not age standardised", 
-                             "Lin. Reg., age standardised"),  
-                 idvar = "month", v.name="coefficients", direction = "long")
-names(dfCFRu)[names(dfCFRu)=="time"] <- "model"
-
-ggplot(dfCFRu, aes(x=month, y=coefficients, group = model, color = model)) +
-  geom_line(size = 0.8) +
-  geom_hline(aes(yintercept = 0)) +
-  labs(title="Effect size comparision",x="Month", y = "Coefficients", 
-       subtitle = "case fatality ratio ~ unemployment in %", 
-       caption = "Read: ''In the age standardised models, a 1 percentage point increase 
-                  in unemployment is associated with a 0.05 percentage point increase 
-                  in case fatality ratio as of March 21''" )+
-  theme_bw()
-
-
-## Hypothesis I, CFR ~ education
-dfCFREUe <- SARvarlist("workersAcadem",varlistCFREU)
-names(dfCFREUe)[names(dfCFREUe)=="coefficientReg"] <- "SAR, age standardised"
-dfCFRe <- SARvarlist("workersAcadem",varlistCFR)
-names(dfCFRe)[names(dfCFRe)=="coefficientReg"] <- "SAR, not age standardised"
-dfCFREUOLSe <- OLSvarlist("workersAcadem",varlistCFREU)
-names(dfCFREUOLSe)[names(dfCFREUOLSe)=="coefficientReg"] <- "Lin. Reg., age standardised"
-
-dfCFRe <- merge(dfCFREUe, dfCFRe, by.dfCFREUe = month, by.dfCFRe = month)
-dfCFRe <- merge(dfCFRe, dfCFREUOLSe, by.dfCFRe = month, by.dfCFREUOLSe = month)
-dfCFRe <- reshape(dfCFRe, times = c("SAR, age standardised", "SAR, not age standardised", 
-                                  "Lin. Reg., age standardised"), 
-                 varying = c("SAR, age standardised", "SAR, not age standardised", 
-                             "Lin. Reg., age standardised"),  
-                 idvar = "month", v.name="coefficients", direction = "long")
-names(dfCFRe)[names(dfCFRe)=="time"] <- "model"
-
-ggplot(dfCFRe, aes(x=month, y=coefficients, group = model, color = model)) +
-  geom_line(size = 0.8) +
-  geom_hline(aes(yintercept = 0)) +
-  labs(title="Effect size comparision",x="Month", y = "Coefficients", 
-       subtitle = "case fatality ratio ~ workers with college education in %", 
-       caption = "Read: ''In the age standardised models, a 1 percentage point
-                  increase in college educated workers is associated with a 0.01 
-                  percentage point decrease in case fatality ratio as of March 21''" )+
-  theme_bw()
-
-## Hypothesis I, CFR ~ income
-dfCFREUi <- SARvarlist("LNmedInc",varlistCFREU)
-names(dfCFREUi)[names(dfCFREUi)=="coefficientReg"] <- "SAR, age standardised"
-dfCFRi <- SARvarlist("LNmedInc",varlistCFR)
-names(dfCFRi)[names(dfCFRi)=="coefficientReg"] <- "SAR, not age standardised"
-dfCFREUOLSi <- OLSvarlist("LNmedInc",varlistCFREU)
-names(dfCFREUOLSi)[names(dfCFREUOLSi)=="coefficientReg"] <- "Lin. Reg., age standardised"
-
-dfCFRi <- merge(dfCFREUi, dfCFRi, by.dfCFREUi = month, by.dfCFRi = month)
-dfCFRi <- merge(dfCFRi, dfCFREUOLSi, by.dfCFRi = month, by.dfCFREUOLSi = month)
-dfCFRi <- reshape(dfCFRi, times = c("SAR, age standardised", "SAR, not age standardised", 
-                                  "Lin. Reg., age standardised"), 
-                 varying = c("SAR, age standardised", "SAR, not age standardised", 
-                             "Lin. Reg., age standardised"),  
-                 idvar = "month", v.name="coefficients", direction = "long")
-names(dfCFRi)[names(dfCFRi)=="time"] <- "model"
-
-ggplot(dfCFRi, aes(x=month, y=coefficients, group = model, color = model)) +
-  geom_line(size = 0.8) +
-  geom_hline(aes(yintercept = 0)) +
-  labs(title="Effect size comparision",x="Month", y = "Coefficients", 
-       subtitle = "case fatality ratio ~ log. median income", 
-       caption = "Read: ''In the age standardised models, a 1% increase county median income
-                  is associated with a 0.0005 percentage point decrease in case fatality ratio as of 
-                  March 21''" ) +
-  theme_bw()
-
-
-lag <- lagsarlm(CFREU21.02 ~ LNmedInc, data=dfds, listw = weighted_neighbors,
-               tol.solve=1.0e-30, zero.policy=T)
-impacts(lag, listw = weighted_neighbors)
-
 #### Robustness checks
-
-## lagged CFR
 
 ## path dependency
 
+## further vars, e.g. catholicism, international trade (foreign guests?), 
 
+#### CFR
+
+## linearity check > no clear trend
+
+## lagged CFR
+ 
+## medical variables
 
 
 
@@ -346,7 +266,6 @@ names(dfdsMAP) <- c("geometry", "KRS", "Incidence Rates, age standardised",
                     "Incidence Rates, age standardised, April 2020", 
                     "Incidence Rates, age standardised, April 2021", 
                     "German Index of Socioeconomic Deprivation")
-
 
 plot(dfdsMAP["Incidence Rates, age standardised"], key.pos = 4, nbreaks = 10,border="white")
 plot(dfdsMAP["Incidence Rates, age standardised, April 2020"], key.pos = 4, nbreaks = 10,border="white")
@@ -406,111 +325,6 @@ ggplot(dfcasesSum, aes(x=month, y=IR, group=1)) +
   theme_bw()
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-### Medical indicator (no clear trend)
-
-## Hypothesis I, CFR ~ population per doctor
-dfCFREUm1 <- SARvarlist("LNpopPerDoc",varlistCFREU)
-names(dfCFREUm1)[names(dfCFREUm1)=="coefficientReg"] <- "SAR, age standardised"
-dfCFRm1 <- SARvarlist("LNpopPerDoc",varlistCFR)
-names(dfCFRm1)[names(dfCFRm1)=="coefficientReg"] <- "SAR, not age standardised"
-dfCFREUOLSm1 <- OLSvarlist("popPerDoc",varlistCFREU)
-names(dfCFREUOLSm1)[names(dfCFREUOLSm1)=="coefficientReg"] <- "Lin. Reg., age standardised"
-
-dfCFRm1 <- merge(dfCFREUm1, dfCFRm1, by.dfCFREUm1 = month, by.dfCFRm1 = month)
-dfCFRm1 <- merge(dfCFRm1, dfCFREUOLSm1, by.dfCFRm1 = month, by.dfCFREUOLSm1 = month)
-dfCFRm1 <- reshape(dfCFRm1, times = c("SAR, age standardised", "SAR, not age standardised", 
-                                      "Lin. Reg., age standardised"), 
-                   varying = c("SAR, age standardised", "SAR, not age standardised", 
-                               "Lin. Reg., age standardised"),  
-                   idvar = "month", v.name="coefficients", direction = "long")
-names(dfCFRm1)[names(dfCFRm1)=="time"] <- "model"
-
-ggplot(dfCFRm1, aes(x=month, y=coefficients, group = model, color = model)) +
-  geom_line(size = 0.8) +
-  geom_hline(aes(yintercept = 0)) +
-  labs(title="Effect size comparision",x="Month", y = "Coefficients", 
-       subtitle = "case fatality ratio ~ log. median income", 
-       caption = "Read: ''In the age standardised models, a 1% increase county median income
-                  is associated with a 0.0005 percentage point decrease in case fatality ratio as of 
-                  March 21''" ) +
-  theme_bw()
-
-## Hypothesis I, CFR ~ population per hospital bed
-dfCFREUm2 <- SARvarlist("hospBeds",varlistCFREU)
-names(dfCFREUm2)[names(dfCFREUm2)=="coefficientReg"] <- "SAR, age standardised"
-dfCFRm2 <- SARvarlist("hospBeds",varlistCFR)
-names(dfCFRm2)[names(dfCFRm2)=="coefficientReg"] <- "SAR, not age standardised"
-dfCFREUOLSm2 <- OLSvarlist("hospBeds",varlistCFREU)
-names(dfCFREUOLSm2)[names(dfCFREUOLSm2)=="coefficientReg"] <- "Lin. Reg., age standardised"
-
-dfCFRm2 <- merge(dfCFREUm2, dfCFRm2, by.dfCFREUm2 = month, by.dfCFRm2 = month)
-dfCFRm2 <- merge(dfCFRm2, dfCFREUOLSm2, by.dfCFRm2 = month, by.dfCFREUOLSm2 = month)
-dfCFRm2 <- reshape(dfCFRm2, times = c("SAR, age standardised", "SAR, not age standardised", 
-                                      "Lin. Reg., age standardised"), 
-                   varying = c("SAR, age standardised", "SAR, not age standardised", 
-                               "Lin. Reg., age standardised"),  
-                   idvar = "month", v.name="coefficients", direction = "long")
-names(dfCFRm2)[names(dfCFRm2)=="time"] <- "model"
-
-ggplot(dfCFRm2, aes(x=month, y=coefficients, group = model, color = model)) +
-  geom_line(size = 0.8) +
-  geom_hline(aes(yintercept = 0)) +
-  labs(title="Effect size comparision",x="Month", y = "Coefficients", 
-       subtitle = "case fatality ratio ~ log. median income", 
-       caption = "Read: ''In the age standardised models, a 1% increase county median income
-                  is associated with a 0.0005 percentage point decrease in case fatality ratio as of 
-                  March 21''" ) +
-  theme_bw()
-
-## lagged CFR (repeat with 2 weeks, one month above average time to death)
-
-dfCFREU_ <- SARvarlistLAG("GISD",varlistCFREU_)
-names(dfCFREU_)[names(dfCFREU_)=="coefficientReg"] <- "SAR, age standardised"
-dfCFR_ <- OLSvarlistLAG("GISD",varlistCFR_)
-names(dfCFR_)[names(dfCFR_)=="coefficientReg"] <- "Lin. Reg., age standardised"
-dfCFREUlag <- OLSvarlistLAG("GISD",varlistCFREUlag)
-names(dfCFREUlag)[names(dfCFREUlag)=="coefficientReg"] <- "Lin. Reg., age standardised, lagged"
-
-
-dfCFRlag <- merge(dfCFREU_, dfCFR_, by.dfCFREU_ = month, by.dfCFR_ = month)
-dfCFRlag <- merge(dfCFRlag, dfCFREUlag, by.dfCFRlag = month, by.dfCFREUlag = month)
-dfCFRlag <- reshape(dfCFRlag, times = c("SAR, age standardised", "Lin. Reg., age standardised", 
-                                        "Lin. Reg., age standardised, lagged"), 
-                    varying = c("SAR, age standardised", "Lin. Reg., age standardised", 
-                                "Lin. Reg., age standardised, lagged"), 
-                    idvar = "month", v.name="coefficients", direction = "long")
-names(dfCFRlag)[names(dfCFRlag)=="time"] <- "model"
-
-ggplot(dfCFRlag, aes(x=month, y=coefficients, group = model, color = model)) +
-  geom_line(size = 0.8) +
-  geom_hline(aes(yintercept = 0)) +
-  labs(title="Effect size comparision",x="Month", y = "Coefficients", 
-       subtitle = "case fatality ratio ~ German Index of socioeconomic Deprivation", 
-       caption = "Read: ''In the age standardised models, the most socioeconomicly deprived
-                  county has a 2 percentage points higher case fatality ratio compared
-                  to the least socioeconomicly deprived county as of March 21''" )+
-  theme_bw()
 
 
 

@@ -1,12 +1,9 @@
 ##########################################################
 #                                                        #
-# BA Sociology:                                          #
-# "COVID-19 in Germany, a socio-geographic perspective"  #
 #                                                        #
-# 2021/04                                                #
+# 2021/10                                                #
 #                                                        #
-# Alexander Busch (alexander.busch@stud.uni-hd.de)       #
-#                                                        #
+# Alexander Busch (a.busch@lse.ac.uk)                    #
 # Functions for Data Analysis                            #
 #                                                        #
 ##########################################################
@@ -85,7 +82,6 @@ aggregateTransform <- function(dfoutput,dfinput,date){
 
 
 
-
 ## In analysis: 
 # these function rely on the month-list specified in the analysis
 # OLS regress a var against a previously defined list of variables, output as df
@@ -95,22 +91,6 @@ OLSvarlist <- function(var, varList){
     inputvar1 <- a
     inputvar2 <- var
     f <- as.formula(paste(inputvar1,paste(inputvar2, collapse = " + "), sep = "~"))
-    b <- summary(lm(f,dfdd,na.action=na.omit))$coefficients
-    c <- data.frame(coefficientReg = b[2, 1])
-    dfoutput <- rbind(dfoutput,c)
-  }
-  dfoutput$month <- month
-  dfoutput$coefficientReg <- round(dfoutput$coefficientReg, digits = 10)
-  dfoutput
-}
-
-# OLS regress as above, but with controllist
-OLSvarlistC <- function(var, varList, controlList){
-  dfoutput <- data.frame()
-  for(a in varList) {
-    inputvar1 <- a
-    input2 <- c(var,controlList)
-    f <- as.formula(paste(inputvar1,paste(input2, collapse = " + "), sep = "~"))
     b <- summary(lm(f,dfdd,na.action=na.omit))$coefficients
     c <- data.frame(coefficientReg = b[2, 1])
     dfoutput <- rbind(dfoutput,c)
@@ -138,43 +118,25 @@ OLSvarlistLAG <- function(var, varList){
 }
 
 # OLS regress a var against a previously defined list of variables, output as df, including controls
-OLSvarlist2 <- function(var, varList, controlList){
+# additionally, model as output
+OLSvarlistM <- function(var, varList, controlList){
   dfoutput <- data.frame()
   input2 <- c(var,controlList)
+  modellist <- list()
   for(a in varList) {
     inputvar1 <- a
     f <- as.formula(paste(inputvar1,paste(input2, collapse = " + "), sep = "~"))
-    b <- summary(lm(f,dfdd,na.action=na.omit))$coefficients
+    regmodel <- lm(f,dfdd,na.action=na.omit)
+    b <- summary(regmodel)$coefficients
     c <- data.frame(coefficientReg = b[2, 1])
     dfoutput <- rbind(dfoutput,c)
+    len <- length(modellist)
+    modellist[[len+1]] <- regmodel
   }
   dfoutput$month <- month
   dfoutput$coefficientReg <- round(dfoutput$coefficientReg, digits = 10)
-  dfoutput
-}
-
-# OLS regress a var against a previously defined list of variables, 
-# for 2 variables
-OLSvarlist3 <- function(var1, var2, varList, controlList){
-  dfoutput <- data.frame()
-  dfoutput1 <- data.frame()
-  dfoutput2 <- data.frame()
-  input2 <- c(var1,var2,controlList)
-  for(a in varList) {
-    inputvar1 <- a
-    f <- as.formula(paste(inputvar1,paste(input2, collapse = " + "), sep = "~"))
-    f <- as.formula(paste(inputvar1,paste(input2, collapse = " + "), sep = "~"))
-    b <- summary(lm(f,dfdd,na.action=na.omit))$coefficients
-    c <- data.frame(coefficientReg1 = b[2, 1])
-    d <- data.frame(coefficientReg2 = b[3, 1])
-    dfoutput1 <- rbind(dfoutput1,c)
-    dfoutput2 <- rbind(dfoutput2,d)
-  }
-  m <- data.frame(month = month)
-  dfoutput <- rbind(dfoutput,m)
-  dfoutput$coefficientReg <- round(dfoutput1$coefficientReg, digits = 5)
-  dfoutput$coefficientReg2 <- round(dfoutput2$coefficientReg2, digits = 5)
-  dfoutput
+  names(modellist) <- varList
+  listoutput <- c(dfoutput, modellist)
 }
 
 # OLS regress a var against a previously defined list of variables, output as df, including controls
@@ -229,6 +191,28 @@ SARvarlistC <- function(var, varList, controlList){
   dfoutput$month <- month
   dfoutput$coefficientReg <- round(dfoutput$coefficientReg, digits = 10)
   dfoutput
+}
+
+# SAR regress as above, but with models in output
+SARvarlistM <- function(var, varList, controlList){
+  dfoutput <- data.frame()
+  input2 <- c(var,controlList)
+  modellist <- list()
+  for(a in varList) {
+    inputvar1 <- a
+    lag <- lagsarlm(as.formula(paste(inputvar1,paste(input2, collapse = " + "), sep = "~")), data=dfds, listw = weighted_neighbors,
+                    tol.solve=1.0e-30, zero.policy=T)
+    b <- impacts(lag, listw = weighted_neighbors)
+    b <- unlist(b)
+    c <- data.frame(coefficientReg = as.numeric(b["total1"]))
+    dfoutput <- rbind(dfoutput,c)
+    len <- length(modellist)
+    modellist[[len+1]] <- lag
+  }
+  dfoutput$month <- month
+  dfoutput$coefficientReg <- round(dfoutput$coefficientReg, digits = 10)
+  names(modellist) <- varList
+  listoutput <- c(dfoutput, modellist)
 }
 
 # Controls for path dependency (previous var in the varList)

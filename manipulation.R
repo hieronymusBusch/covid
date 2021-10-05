@@ -1,11 +1,9 @@
 ##########################################################
 #                                                        #
-# BA Sociology:                                          #
-# "COVID-19 in Germany, a social-geographic perspective" #
 #                                                        #
-# 2021/04                                                #
+# 2021/10                                                #
 #                                                        #
-# Alexander Busch (alexander.busch@stud.uni-hd.de)       #
+# Alexander Busch (a.busch@lse.ac.uk)                    #
 #                                                        #
 # Data Manipulation                                      #
 #                                                        #
@@ -134,6 +132,37 @@ dfeu$fy80 <- 5000 / (dfeu$y80)
 dfeu2 <- dfeu[,c(1,2,110:115)]
 dfeu2 <- rename(dfeu2, name = "AGE (Labels)", pop = Total)
 
+# Data for Religion
+# some county-merges need to be accounted for
+# share of people of certain faiths computed
+dfrel <- read_excel("data/data-religion.xlsx", sheet = 3, range = "A11:DS12553", 
+                    col_types = c("text", rep("skip",5), "text", rep("skip",112),rep("numeric",4)))
+names(dfrel) <- c("KRS", "name", "zenPop", "catholic", "protestant","other")
+dfrel <- subset(dfrel, str_length(KRS) == 5)
+
+dfrel[21,3:6] <- dfrel[21,3:6] + dfrel[25,3:6]
+dfrel[362,3:6] <- dfrel[362,3:6] + dfrel[359,3:6] + dfrel[345,3:6]
+dfrel[361,3:6] <- dfrel[361,3:6] + dfrel[349,3:6] + dfrel[357,3:6]
+dfrel[354,3:6] <- dfrel[354,3:6] + dfrel[360,3:6]
+dfrel[352,3:6] <- dfrel[352,3:6] + dfrel[356,3:6] + dfrel[355,3:6] + dfrel[346,3:6]
+dfrel[351,3:6] <- dfrel[351,3:6] + dfrel[353,3:6]
+dfrel[358,3:6] <- dfrel[358,3:6] + dfrel[350,3:6]
+
+dfrel[21,1] <- "03159"
+dfrel[362,1] <- "13075"
+dfrel[361,1] <- "13073"
+dfrel[354,1] <- "13076"
+dfrel[352,1] <- "13071"
+dfrel[351,1] <- "13072"
+dfrel[358,1] <- "13074"
+
+dfrel <- dfrel[-c(359,345,349,357,360,356,355,346,353,350,25),]
+
+dfrel$relCath <- 100 * dfrel$catholic / dfrel$zenPop
+dfrel$relProt <- 100 * dfrel$protestant / dfrel$zenPop
+dfrel$relOth <- 100 * dfrel$other / dfrel$zenPop
+
+dfrel <- dfrel[,-c(2:6)]
 
 ## dfds contains shapefile for German county-data, but also waterways to be dropped 
 dfds <- st_read("data/shapefiles/250_NUTS3.shp")
@@ -176,6 +205,12 @@ dfdd <- dfdd[, c(1,3,2,5,36,6,4,37,7:35,38:43)]
 dfdd$name.1 <- NULL
 dfdd$pop <- NULL
 dfdd$countyName <- NULL
+
+
+
+
+
+
 
 
 ### Working with COVID-19 Data
@@ -224,6 +259,7 @@ for (i in 1:18) {
   a <- aggregateTransform(a,rkilist4[[i]],rkilist2[[i]])
   assign(paste("dfrkiaggr", rkilist2[[i]], sep=""), a)
 }
+
 
 ### Combining data 
 
@@ -320,11 +356,13 @@ dfdd$LNIREU <- log(dfdd$IREU)
 dfdd$LNhhInc <- log(dfdd$hhInc)
 dfdd$LNmedInc <- log(dfdd$medInc)
 dfdd$LNpopPerDoc <- log(dfdd$popPerDoc)
-dfdd$GISDforeign <- dfdd$GISD * dfdd$shareForeign
-dfdd$GISDeast <- dfdd$GISD * dfdd$east
+dfdd$LNpopDensity <- log(dfdd$popDensity)
 
 # to prevent 0s to become neg. infinite (by ln(0)), replace those with -2.3 (incedence of 1 per 1,000,000)
 dfdd[dfdd < -10000] <- -2.3
+
+# combine with religious data
+dfdd <- merge(dfdd, dfrel, by.dfdd = KRS, by.dfrel = KRS)
 
 # Combine dfds and dfdd for mapping / SAR Modeling
 dfds <- merge(dfds, dfdd, by.dfds = NUTS_CODE, by.dfdd = NUTS_CODE)
@@ -332,5 +370,4 @@ dfds <- merge(dfds, dfdd, by.dfds = NUTS_CODE, by.dfdd = NUTS_CODE)
 dfds$NUTS_NAME <- NULL
 dfdd[,c("fy0004", "fy0514", "fy1534", "fy3559", "fy6079", "fy80")] <- NULL # EU weights
 dfds[,c("fy0004", "fy0514", "fy1534", "fy3559", "fy6079", "fy80")] <- NULL # EU weights
-
 
