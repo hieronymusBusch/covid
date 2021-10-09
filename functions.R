@@ -252,61 +252,6 @@ SARvarlistLAG <- function(var, varList){
   dfoutput
 }
 
-
-# SAR regress a var against a previously defined list of variables, output as df of avg total effects & rho, including controls
-SARvarlist2 <- function(var, varList, controlList){
-  dfoutput <- data.frame()
-  dfoutput2 <- data.frame()
-  input2 <- c(var,controlList)
-  for(a in varList) {
-    inputvar1 <- a
-    f <- as.formula(paste(inputvar1,paste(input2, collapse = " + "), sep = "~"))
-    lag = lagsarlm(f, data=dfds, listw = weighted_neighbors,
-                   tol.solve=1.0e-30, zero.policy=T)
-    b <- impacts(lag, listw = weighted_neighbors)
-    b <- unlist(b)
-    c <- data.frame(coefficientReg = as.numeric(b["total1"]))
-    dfoutput <- rbind(dfoutput,c)
-    d <- data.frame(rho = as.numeric(summary(lag)$rho))
-    dfoutput2 <- rbind(dfoutput2,d)
-  }
-  dfoutput$rho <- dfoutput2$rho
-  dfoutput$month <- month
-  dfoutput$coefficientReg <- round(dfoutput$coefficientReg, digits = 10)
-  dfoutput
-}
-
-# SAR regress a var against a previously defined list of variables, 
-# output as df of avg total effects & rho, including controls
-# for 2 vars
-SARvarlist3 <- function(var1, var2, varList, controlList){
-  dfoutput <- data.frame()
-  dfoutput1 <- data.frame()
-  dfoutput2 <- data.frame()
-  dfoutput3 <- data.frame()
-  input2 <- c(var1,var2,controlList)
-  for(a in varList) {
-    inputvar1 <- a
-    f <- as.formula(paste(inputvar1,paste(input2, collapse = " + "), sep = "~"))
-    lag = lagsarlm(f, data=dfds, listw = weighted_neighbors,
-                   tol.solve=1.0e-30, zero.policy=T)
-    b <- impacts(lag, listw = weighted_neighbors)
-    b <- unlist(b)
-    c <- data.frame(coefficientReg1 = as.numeric(b["total1"]))
-    d <- data.frame(coefficientReg2 = as.numeric(b["total2"]))
-    dfoutput1 <- rbind(dfoutput1,c)
-    dfoutput3 <- rbind(dfoutput3,d)
-    g <- data.frame(rho = as.numeric(summary(lag)$rho))
-    dfoutput2 <- rbind(dfoutput2,g)
-  }
-  m <- data.frame(month = month)
-  dfoutput <- rbind(dfoutput,m)
-  dfoutput$coefficientReg <- round(dfoutput1$coefficientReg, digits = 5)
-  dfoutput$coefficientReg2 <- round(dfoutput3$coefficientReg2, digits = 5)
-  dfoutput$rho <- dfoutput2$rho
-  dfoutput
-}
-
 # for displaying scales with 4 digits after .+ display two barplots over time
 scaledigits <- function(x) sprintf("%.4f", x)
 
