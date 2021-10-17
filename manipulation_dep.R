@@ -1,6 +1,13 @@
-
-### NOT Implemented yet! 
-
+##########################################################
+#                                                        #
+#                                                        #
+# 2021/10                                                #
+#                                                        #
+# Alexander Busch (a.busch@lse.ac.uk)                    #
+#                                                        #
+# Data Manipulation Dependent Variables                  #
+#                                                        #
+##########################################################
 
 ### Working with COVID-19 Data
 ## as file to big for github, it needs to be downloaded seperapte via
@@ -45,9 +52,8 @@ rkilist4 <- list(dfrki20.02, dfrki20.03, dfrki20.04, dfrki20.05, dfrki20.06,
                  dfrki20.07, dfrki20.08, dfrki20.09, dfrki20.10, dfrki20.11,
                  dfrki20.12, dfrki21.01, dfrki21.02, dfrki21.03, dfrki21.04, 
                  dfrki21.05, dfrki21.06, dfrki)
-
+# first aggregating cases and deaths by age group
 for (i in 1:18) {
-  # first aggregating cases and deaths by age group
   a <- ddply(rkilist4[[i]], .(IdLandkreis, Altersgruppe), summarise, cases=sum(AnzahlFall))
   a <- reshape(a, idvar = "IdLandkreis", timevar = "Altersgruppe", direction = "wide")
   dfdeaths <- ddply(rkilist4[[i]], .(IdLandkreis, Altersgruppe), summarise, deaths=sum(AnzahlTodesfall))
@@ -56,7 +62,6 @@ for (i in 1:18) {
   names(a)[names(a)=="IdLandkreis"] <- "KRS"
   namescol <- colnames(a)
   a[is.na(a)] <- 0
-
   assign(paste("dfrkiaggr", rkilist2[[i]], sep=""), a)
 }
 rkilist5 <- list(dfrkiaggr20.02, dfrkiaggr20.03, dfrkiaggr20.04, dfrkiaggr20.05, dfrkiaggr20.06, 
@@ -64,61 +69,82 @@ rkilist5 <- list(dfrkiaggr20.02, dfrkiaggr20.03, dfrkiaggr20.04, dfrkiaggr20.05,
                  dfrkiaggr20.12, dfrkiaggr21.01, dfrkiaggr21.02, dfrkiaggr21.03, dfrkiaggr21.04, 
                  dfrkiaggr21.05, dfrkiaggr21.06, dfrkiaggr)
 
+
+
+# create df with all KRS reference numbers
+KRS <- dfrkiaggr20.03[,"KRS"]
+dfKRS <- data.frame(KRS)
+dfKRS$KRS <- as.character(dfKRS$KRS)
+
+
+
+
+
+# problem with aggregating Berlin cases / deaths, too high
+
+# creating df with aggregate Berlin cases/deaths with correct geographic references
 for (i in 1:18){
-  # creating df with aggregate Berlin cases/deaths with correct geographic reference (KRS)
-  dfberlin <- rkilist5[[i]] %>% filter(
-    KRS == "11001"|KRS =="11002"|KRS =="11003"|KRS =="11004"|KRS =="11005"|KRS =="11006"|
-      KRS =="11007"|KRS =="11008"|KRS =="11009"|
-      KRS =="11010"|KRS =="11011"|KRS =="11012") 
-  rkilist5[[i]] <- rkilist5[[i]][, c("KRS", sort(setdiff(names(rkilist5[[i]]), "KRS")))]
+  a <- rkilist5[[i]]
+  a <- merge(dfKRS, a, by.dfKRS = KRS, by.a = KRS, all = TRUE)
+  a <- a[, c("KRS", sort(setdiff(names(a), "KRS")))]
+  dfberlin <- subset(a, KRS == "11001"|KRS =="11002"|KRS =="11003"|KRS =="11004"|KRS =="11005"|KRS =="11006"|
+                       KRS =="11007"|KRS =="11008"|KRS =="11009"|
+                       KRS =="11010"|KRS =="11011"|KRS =="11012")
   dfberlin2 <- data.frame(KRS = "11000")
-  for(j in 2:ncol(rkilist5[[i]])){
-    rkilist5[[i]] <- sum(dfberlin[,j])
-    dfberlin2 <- cbind(dfberlin2,rkilist5[[i]])
+  for(j in 2:13){
+    b <- sum(dfberlin[,j])
+    dfberlin2 <- cbind(b,dfberlin2)
   }
-  rkilist5[[i]] <- rbind(rkilist5[[i]],dfberlin2)
-  rkilist5[[i]] <- rkilist5[[i]] %>% filter (!(
-    KRS == "11001"|KRS =="11002"|KRS =="11003"|KRS =="11004"|KRS =="11005"|KRS =="11006"|
-      KRS =="11007"|KRS =="11008"|KRS =="11009"|
-      KRS =="11010"|KRS =="11011"|KRS =="11012")
-  )
+  dfberlin2 <- setNames(rev(dfberlin2), names(a))
+  a <- rbind(a, dfberlin2)
+  a <- subset(a, KRS != "11001"&KRS !="11002"&KRS !="11003"&KRS !="11004"&KRS !="11005"&KRS !="11006"&
+                KRS !="11007"&KRS !="11008"&KRS !="11009"&
+                KRS !="11010"&KRS !="11011"&KRS !="11012")
+  a[is.na(a)] <- 0
+  assign(paste("dfrkiaggr", rkilist2[[i]], sep=""), a)
 }
+rkilist5 <- list(dfrkiaggr20.02, dfrkiaggr20.03, dfrkiaggr20.04, dfrkiaggr20.05, dfrkiaggr20.06, 
+                 dfrkiaggr20.07, dfrkiaggr20.08, dfrkiaggr20.09, dfrkiaggr20.10, dfrkiaggr20.11,
+                 dfrkiaggr20.12, dfrkiaggr21.01, dfrkiaggr21.02, dfrkiaggr21.03, dfrkiaggr21.04, 
+                 dfrkiaggr21.05, dfrkiaggr21.06, dfrkiaggr)
 
 
 
 
 
 
+
+
+# giving names in order to later match
 namescol <- colnames(dfrkiaggr)
-for (i in rkilist5) {
-  # giving unique names in order to later match
-  names(i) <- c("KRS","name", "NUTS_CODE", "population")
+for (i in 1:18){
+  a <- rkilist5[[i]]
   for(j in 2:13){
     ifelse(str_detect(namescol[[j]], "^c"), 
            names(a)[names(a)==namescol[[j]]] <- paste("cases", rkilist3[[j]], sep=""),
            names(a)[names(a)==namescol[[j]]] <- paste("deaths", rkilist3[[j]], sep="")
     ) 
   }
+  assign(paste("dfrkiaggr", rkilist2[[i]], sep=""), a)
 }
+rkilist5 <- list(dfrkiaggr20.02, dfrkiaggr20.03, dfrkiaggr20.04, dfrkiaggr20.05, dfrkiaggr20.06, 
+                 dfrkiaggr20.07, dfrkiaggr20.08, dfrkiaggr20.09, dfrkiaggr20.10, dfrkiaggr20.11,
+                 dfrkiaggr20.12, dfrkiaggr21.01, dfrkiaggr21.02, dfrkiaggr21.03, dfrkiaggr21.04, 
+                 dfrkiaggr21.05, dfrkiaggr21.06, dfrkiaggr)
 
-
-
-  
-
-
-
-
-
-
-
-
-
-  # calculating sums: one crude sum, one standardised EU sum, IR and CFR both with and without EU weights
+# calculating sums: one crude sum, one standardised EU sum, IR and CFR both with and without EU weights
+for (i in 1:18){
+  a <- rkilist5[[i]]
   a$cases <- as.numeric(apply(a[,2:7], 1, sum))
   a$deaths <- as.numeric(apply(a[,8:13], 1, sum))
-  
-  a <- merge(dfdd, a, by.dfdd = KRS, by.a = KRS, all = TRUE)
-  
+  # reading in pop and EU pop variables from indep. vars
+    a$population <- dfdd$population
+    a$fy0004 <- dfdd$fy0004
+    a$fy0514 <- dfdd$fy0514
+    a$fy1534 <- dfdd$fy1534
+    a$fy3559 <- dfdd$fy3559
+    a$fy6079 <- dfdd$fy6079
+    a$fy80 <- dfdd$fy80
   a$IR <- (a$cases / a$population) * 100000
   a$IREU <- a$cases0004 * a$fy0004 + a$cases0514 * a$fy0514 +
     a$cases1534 * a$fy1534 + a$cases3559 * a$fy3559 +
@@ -128,17 +154,27 @@ for (i in rkilist5) {
     a$deaths1534 * a$fy1534 + a$deaths3559 * a$fy3559 +
     a$deaths6079 * a$fy6079 + a$deaths80 * a$fy80
   a$CFREU <- (a$deathsEU / a$IREU)
-  
-  a$IRdiff <- a$IR - a$IREU
-  a$CFRdiff <- a$CFR - a$CFREU
-  
-  a <- a[,c(1,53:61)]
   colnames(a) <- paste(colnames(a), rkilist2[[i]], sep = "")
   namescol <- colnames(a)
   names(a)[names(a)==namescol[[1]]] <- "KRS"
-  
+  a <- a[,c(1,14,15,23:27)]
   assign(paste("dfrkiaggr", rkilist2[[i]], sep=""), a)
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

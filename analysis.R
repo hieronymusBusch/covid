@@ -20,26 +20,6 @@ varlistLNIREU <- c("LNIREU20.02","LNIREU20.03","LNIREU20.04","LNIREU20.05","LNIR
                  "LNIREU20.07","LNIREU20.08","LNIREU20.09","LNIREU20.10",
                  "LNIREU20.11","LNIREU20.12","LNIREU21.01","LNIREU21.02",
                  "LNIREU21.03","LNIREU21.04","LNIREU21.05","LNIREU21.06")
-varlistCFREU <- c("CFREU20.02","CFREU20.03","CFREU20.04","CFREU20.05","CFREU20.06",
-                "CFREU20.07","CFREU20.08","CFREU20.09","CFREU20.10",
-                "CFREU20.11","CFREU20.12","CFREU21.01","CFREU21.02",
-                "CFREU21.03","CFREU21.04","CFREU21.05","CFREU21.06")
-varlistCFR <- c("CFR20.02","CFR20.03","CFR20.04","CFR20.05","CFR20.06",
-                  "CFR20.07","CFR20.08","CFR20.09","CFR20.10",
-                  "CFR20.11","CFR20.12","CFR21.01","CFR21.02",
-                  "CFR21.03","CFR21.04","CFR21.05","CFR21.06")
-varlistCFREU_ <- c("CFREU20.04","CFREU20.05","CFREU20.06",
-                  "CFREU20.07","CFREU20.08","CFREU20.09","CFREU20.10",
-                  "CFREU20.11","CFREU20.12","CFREU21.01","CFREU21.02",
-                  "CFREU21.03","CFREU21.04","CFREU21.05","CFREU21.06")
-varlistCFR_ <- c("CFR20.04","CFR20.05","CFR20.06",
-                "CFR20.07","CFR20.08","CFR20.09","CFR20.10",
-                "CFR20.11","CFR20.12","CFR21.01","CFR21.02",
-                "CFR21.03","CFR21.04","CFR21.05","CFR21.06")
-varlistCFREUlag <- c("CFREUlag20.04","CFREUlag20.05","CFREUlag20.06",
-                   "CFREUlag20.07","CFREUlag20.08","CFREUlag20.09","CFREUlag20.10",
-                   "CFREUlag20.11","CFREUlag20.12","CFREUlag21.01","CFREUlag21.02",
-                   "CFREUlag21.03","CFREUlag21.04","CFREUlag21.05","CFREUlag21.06")
 varlistControl <- c("LNpopDensity","SH","HH","NI","HB","MV","BB","BE","ST","SN","TH","NW","HE","RP","BY","SL")
 varlistStates <- c("SH","HH","NI","HB","MV","BB","BE","ST","SN","TH","NW","HE","RP","BY","SL")
 varlistControl3 <- c("LNpopDensity","relCath","SH","HH","NI","HB","MV","BB","BE","ST","SN","TH","NW","HE","RP","BY","SL")
@@ -59,6 +39,8 @@ weighted_neighbors
 ## Test for spatial Autocorrelation in data
 moran.test(dfds$IREU, weighted_neighbors, zero.policy=T)
 moran.test(dfds$IREU20.04, weighted_neighbors, zero.policy=T)
+moran.test(dfds$IREU20.08, weighted_neighbors, zero.policy=T)
+moran.test(dfds$IREU20.12, weighted_neighbors, zero.policy=T)
 moran.test(dfds$IREU21.04, weighted_neighbors, zero.policy=T)
 moran.plot(dfds$IREU, weighted_neighbors, zero.policy=T,xlab="incidence rates, age standardised", ylab="spatially lagged IR")
 moran.plot(dfds$IREU20.04, weighted_neighbors, zero.policy=T,xlab="incidence rates, age standardised", ylab="spatially lagged IR")
@@ -104,7 +86,7 @@ ggplot(dfIRGISD, aes(x=month, y=coefficients, group = model, color = model)) +
                  to the least socioeconomicly deprived county as of March 21''")+
   theme_bw()
 
-# latex output
+# latex output reg models
 stargazer(modelsIRGISD1[1:6], type = "latex", omit = varlistStates,
           omit.stat=c("f", "ser"), align=TRUE,digits=1)
 stargazer(modelsIRGISD1[7:12], type = "latex", omit = varlistStates,
@@ -121,6 +103,8 @@ stargazer(modelsIRGISD3[13:17], type = "latex", omit = varlistStates,
 
 
 
+
+### Further Hypothesis (without reg model output)
 
 ## Hypothesis I, IR ~ unemployment
 dfIREUu <- SARvarlistC("unemployment",varlistLNIREU,varlistControl)
@@ -215,31 +199,10 @@ ggplot(dfIRi, aes(x=month, y=coefficients, group = model, color = model)) +
   theme_bw()
 
 
-#### Robustness checks
-
-## path dependency
-
-## further vars, e.g. catholicism, international trade (foreign guests?), 
-
-#### CFR
-
-## linearity check > no clear trend
-
-## lagged CFR
- 
-## medical variables
 
 
 
-
-
-
-
-
-
-
-
-### Tables etc. for LaTeX Output
+### Further Descriptive Tables etc. as LaTeX Output
 
 # table with independent variables 
 stargazer(dfdd[c("GISD","unemployment","medInc","workersAcadem","popDensity",
@@ -257,6 +220,18 @@ stargazer(dfdd[c("CFREU","IR","cases","deaths","CFREU20.02",
                  "IREU20.07","IREU20.08","IREU20.09","IREU20.10",
                  "IREU20.11","IREU20.12","IREU21.01","IREU21.02",
                  "IREU21.03","IREU21.04","IREU21.05")], 
+          type = "latex", digits=2,flip = FALSE, omit.summary.stat = 
+            c("median","p25","p75"))
+
+stargazer(dfdd[c("CFR","IR","cases","deaths","CFR20.02",
+                 "CFR20.03","CFR20.04","CFR20.05","CFR20.06",
+                 "CFR20.07","CFR20.08","CFR20.09","CFR20.10",
+                 "CFR20.11","CFR20.12","CFR21.01","CFR21.02",
+                 "CFR21.03","CFR21.04","CFR21.05",
+                 "IR20.02","IR20.03","IR20.04","IR20.05","IR20.06",
+                 "IR20.07","IR20.08","IR20.09","IR20.10",
+                 "IR20.11","IR20.12","IR21.01","IR21.02",
+                 "IR21.03","IR21.04","IR21.05")], 
           type = "latex", digits=2,flip = FALSE, omit.summary.stat = 
             c("median","p25","p75"))
 
@@ -315,7 +290,6 @@ ggplot(dfaggrCFRSum, aes(x=month, y=CFR, group=1)) +
   labs(title="Average county-CFR per month",x="Month", y = "CFR")+
   theme_bw()
 
-
 ggplot(dfcasesSum, aes(x=month, y=IR, group=1)) +
   geom_line() +
   geom_point() +
@@ -323,6 +297,39 @@ ggplot(dfcasesSum, aes(x=month, y=IR, group=1)) +
   scale_x_discrete(limits=dfcasesSum$month)+
   labs(title="Average country-wide incidence rate per month",x="Month", y = "incidence rate")+
   theme_bw()
+
+
+
+
+
+################
+###
+### Work in Progress:
+###
+###############
+
+
+##### To Do: 
+
+#### Robustness checks
+
+## path dependency
+
+## other factors
+    # further vars, e.g. catholicism, international trade (foreign guests?), gender
+
+## population weights for counties / crude aggregated cases 
+
+
+#### CFR
+
+## linearity check > no clear trend
+
+## proof of little spatial dependence
+
+## lagged CFR
+
+## medical variables
 
 
 
