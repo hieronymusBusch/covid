@@ -9,14 +9,11 @@
 #                                                        #
 ##########################################################
 
-
-
-### Combining data 
-
 listrkiaggr <- list(dfrkiaggr20.02,dfrkiaggr20.03,dfrkiaggr20.04,dfrkiaggr20.05,dfrkiaggr20.06,dfrkiaggr20.07,
                     dfrkiaggr20.08,dfrkiaggr20.09,dfrkiaggr20.10,dfrkiaggr20.11,dfrkiaggr20.12,
                     dfrkiaggr21.01,dfrkiaggr21.02,dfrkiaggr21.03,dfrkiaggr21.04,dfrkiaggr21.05,dfrkiaggr21.06)
 
+# merge small aggregated monthly data sets to one 
 for (a in listrkiaggr) {
   dfrkiaggr <- merge(dfrkiaggr, a, by = "KRS",all = TRUE)
 }
@@ -56,7 +53,6 @@ dfrkiaggr$CFREUlag21.04 <- (dfrkiaggr$deathsEU21.04 / dfrkiaggr$IREU21.03)
 dfrkiaggr$CFREUlag21.05 <- (dfrkiaggr$deathsEU21.05 / dfrkiaggr$IREU21.04)
 dfrkiaggr$CFREUlag21.06 <- (dfrkiaggr$deathsEU21.06 / dfrkiaggr$IREU21.05)
 
-
 # recode undefined (x/0) CFR to 0 as described in Thesis
 dfrkiaggr[is.na(dfrkiaggr)] <- 0
 dfrkiaggr[dfrkiaggr == Inf] <- 0
@@ -64,7 +60,7 @@ dfrkiaggr[dfrkiaggr == Inf] <- 0
 ## Combinig aggr data and spatial / geographic data
 dfdd <- merge(dfdd, dfrkiaggr, by.dfdd = KRS, by.dfrkiaggr = KRS)
 
-# ln
+# logs 
 dfdd$LNIR20.02 <- log(dfdd$IR20.02)
 dfdd$LNIR20.03 <- log(dfdd$IR20.03)
 dfdd$LNIR20.04 <- log(dfdd$IR20.04)

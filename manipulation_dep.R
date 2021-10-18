@@ -76,12 +76,6 @@ KRS <- dfrkiaggr20.03[,"KRS"]
 dfKRS <- data.frame(KRS)
 dfKRS$KRS <- as.character(dfKRS$KRS)
 
-
-
-
-
-# problem with aggregating Berlin cases / deaths, too high
-
 # creating df with aggregate Berlin cases/deaths with correct geographic references
 for (i in 1:18){
   a <- rkilist5[[i]]
@@ -101,19 +95,13 @@ for (i in 1:18){
                 KRS !="11007"&KRS !="11008"&KRS !="11009"&
                 KRS !="11010"&KRS !="11011"&KRS !="11012")
   a[is.na(a)] <- 0
+  a <- a[order(a$KRS),]
   assign(paste("dfrkiaggr", rkilist2[[i]], sep=""), a)
 }
 rkilist5 <- list(dfrkiaggr20.02, dfrkiaggr20.03, dfrkiaggr20.04, dfrkiaggr20.05, dfrkiaggr20.06, 
                  dfrkiaggr20.07, dfrkiaggr20.08, dfrkiaggr20.09, dfrkiaggr20.10, dfrkiaggr20.11,
                  dfrkiaggr20.12, dfrkiaggr21.01, dfrkiaggr21.02, dfrkiaggr21.03, dfrkiaggr21.04, 
                  dfrkiaggr21.05, dfrkiaggr21.06, dfrkiaggr)
-
-
-
-
-
-
-
 
 # giving names in order to later match
 namescol <- colnames(dfrkiaggr)
@@ -132,19 +120,28 @@ rkilist5 <- list(dfrkiaggr20.02, dfrkiaggr20.03, dfrkiaggr20.04, dfrkiaggr20.05,
                  dfrkiaggr20.12, dfrkiaggr21.01, dfrkiaggr21.02, dfrkiaggr21.03, dfrkiaggr21.04, 
                  dfrkiaggr21.05, dfrkiaggr21.06, dfrkiaggr)
 
+
+
+### !!! Some IR Are falsely calculated (e.g. Hamburg, Berlin despite pop seemingly correct)
+### sort statement above seems correct order... seems to be only a problem for Hamburg & Berlin
+
+
+dfpop <- dfdd[, c("KRS", "population", "fy0004", "fy0514", "fy1534", "fy3559", "fy6079", "fy80")]
+
 # calculating sums: one crude sum, one standardised EU sum, IR and CFR both with and without EU weights
 for (i in 1:18){
   a <- rkilist5[[i]]
   a$cases <- as.numeric(apply(a[,2:7], 1, sum))
   a$deaths <- as.numeric(apply(a[,8:13], 1, sum))
   # reading in pop and EU pop variables from indep. vars
-    a$population <- dfdd$population
-    a$fy0004 <- dfdd$fy0004
-    a$fy0514 <- dfdd$fy0514
-    a$fy1534 <- dfdd$fy1534
-    a$fy3559 <- dfdd$fy3559
-    a$fy6079 <- dfdd$fy6079
-    a$fy80 <- dfdd$fy80
+#    a$population <- dfdd$population
+#    a$fy0004 <- dfdd$fy0004
+#    a$fy0514 <- dfdd$fy0514
+#    a$fy1534 <- dfdd$fy1534
+#    a$fy3559 <- dfdd$fy3559
+#    a$fy6079 <- dfdd$fy6079
+#    a$fy80 <- dfdd$fy80
+  a <- merge(a, dfpop, by.a = KRS, by.dfpop = KRS, all = TRUE)
   a$IR <- (a$cases / a$population) * 100000
   a$IREU <- a$cases0004 * a$fy0004 + a$cases0514 * a$fy0514 +
     a$cases1534 * a$fy1534 + a$cases3559 * a$fy3559 +
