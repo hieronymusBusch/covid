@@ -20,13 +20,26 @@ varlistLNIREU <- c("LNIREU20.02","LNIREU20.03","LNIREU20.04","LNIREU20.05","LNIR
                  "LNIREU20.07","LNIREU20.08","LNIREU20.09","LNIREU20.10",
                  "LNIREU20.11","LNIREU20.12","LNIREU21.01","LNIREU21.02",
                  "LNIREU21.03","LNIREU21.04","LNIREU21.05","LNIREU21.06")
+varlistLNIREUlag1 <- c("LNIREU20.03","LNIREU20.04","LNIREU20.05","LNIREU20.06",
+                   "LNIREU20.07","LNIREU20.08","LNIREU20.09","LNIREU20.10",
+                   "LNIREU20.11","LNIREU20.12","LNIREU21.01","LNIREU21.02",
+                   "LNIREU21.03","LNIREU21.04","LNIREU21.05","LNIREU21.06")
+varlistLNIREUlag2 <- c("LNIREU20.02","LNIREU20.03","LNIREU20.04","LNIREU20.05","LNIREU20.06",
+                      "LNIREU20.07","LNIREU20.08","LNIREU20.09","LNIREU20.10",
+                      "LNIREU20.11","LNIREU20.12","LNIREU21.01","LNIREU21.02",
+                      "LNIREU21.03","LNIREU21.04","LNIREU21.05")
+varlistCFR <- c("CFR20.02","CFR20.03","CFR20.04","CFR20.05","CFR20.06",
+                 "CFR20.07","CFR20.08","CFR20.09","CFR20.10",
+                 "CFR20.11","CFR20.12","CFR21.01","CFR21.02",
+                 "CFR21.03","CFR21.04","CFR21.05","CFR21.06")
+varlistCFREU <- c("CFREU20.02","CFREU20.03","CFREU20.04","CFREU20.05","CFREU20.06",
+                   "CFREU20.07","CFREU20.08","CFREU20.09","CFREU20.10",
+                   "CFREU20.11","CFREU20.12","CFREU21.01","CFREU21.02",
+                   "CFREU21.03","CFREU21.04","CFREU21.05","CFREU21.06")
 varlistControl <- c("LNpopDensity","SH","HH","NI","HB","MV","BB","BE","ST","SN","TH","NW","HE","RP","BY","SL")
 varlistStates <- c("SH","HH","NI","HB","MV","BB","BE","ST","SN","TH","NW","HE","RP","BY","SL")
 varlistControl3 <- c("LNpopDensity","relCath","SH","HH","NI","HB","MV","BB","BE","ST","SN","TH","NW","HE","RP","BY","SL")
 
-
-month <- c("20-02", "20-03", "20-04", "20-05", "20-06", "20-07", "20-08", "20-09", 
-           "20-10", "20-11", "20-12", "21-01", "21-02", "21-03", "21-04", "21-05", "21-06")
 
 # Create lists needed for analysis
 neighbors <- poly2nb(dfds)
@@ -35,6 +48,8 @@ weighted_neighbors
 
 
 ### Analysis
+
+## Incidence Rates
 
 ## Test for spatial Autocorrelation in data
 moran.test(dfds$IREU, weighted_neighbors, zero.policy=T)
@@ -46,18 +61,38 @@ moran.plot(dfds$IREU, weighted_neighbors, zero.policy=T,xlab="incidence rates, a
 moran.plot(dfds$IREU20.04, weighted_neighbors, zero.policy=T,xlab="incidence rates, age standardised", ylab="spatially lagged IR")
 moran.plot(dfds$IREU21.04, weighted_neighbors, zero.policy=T,xlab="incidence rates, age standardised", ylab="spatially lagged IR")
 
+
 ## Hypothesis I, IR ~ GISD
-listIRGISD1 <- SARvarlistM("GISD",varlistLNIREU,varlistControl)
+# plotting shows linear relationship, however, heteroscedasticity in the last 2? 
+ggplot(dfdd, aes(x=GISD, y=LNIREU20.04)) +
+  geom_point() +
+  labs(title="LNIR ~ GISD",x="German Index of Socioeconomic Deprivation", y = "log incidence rates 20-04") +
+  theme_bw() 
+ggplot(dfdd, aes(x=GISD, y=LNIREU20.08)) +
+  geom_point() +
+  labs(title="LNIR ~ GISD",x="German Index of Socioeconomic Deprivation", y = "log incidence rates 20-08") +
+  theme_bw() 
+ggplot(dfdd, aes(x=GISD, y=LNIREU20.12)) +
+  geom_point() +
+  labs(title="LNIR ~ GISD",x="German Index of Socioeconomic Deprivation", y = "log incidence rates 20-12") +
+  theme_bw() 
+ggplot(dfdd, aes(x=GISD, y=LNIREU21.04)) +
+  geom_point() +
+  labs(title="LNIR ~ GISD",x="German Index of Socioeconomic Deprivation", y = "log incidence rates 21-04") +
+  theme_bw() 
+
+# models
+listIRGISD1 <- regvarlistM("GISD",varlistLNIREU,varlistControl,month1,"SAR")
 dfIRGISD1 <- as.data.frame(listIRGISD1[1:2])
 modelsIRGISD1 <- listIRGISD1[3:19]
 names(dfIRGISD1)[names(dfIRGISD1)=="coefficientReg"] <- "SAR, age standardised"
 
-listIRGISD2 <- SARvarlistM("GISD",varlistLNIR,varlistControl)
+listIRGISD2 <- regvarlistM("GISD",varlistLNIR,varlistControl,month1,"SAR")
 dfIRGISD2 <- as.data.frame(listIRGISD2[1:2])
 modelsIRGISD2 <- listIRGISD2[3:19]
 names(dfIRGISD2)[names(dfIRGISD2)=="coefficientReg"] <- "SAR, not age standardised"
 
-listIRGISD3 <- OLSvarlistM("GISD",varlistLNIREU,varlistControl)
+listIRGISD3 <- regvarlistM("GISD",varlistLNIREU,varlistControl,month1,"OLS")
 dfIRGISD3 <- as.data.frame(listIRGISD3[1:2])
 modelsIRGISD3 <- listIRGISD3[3:19]
 names(dfIRGISD3)[names(dfIRGISD3)=="coefficientReg"] <- "Lin. Reg., age standardised"
@@ -107,11 +142,11 @@ stargazer(modelsIRGISD3[13:17], type = "latex", omit = varlistStates,
 ### Further Hypothesis (without reg model output)
 
 ## Hypothesis I, IR ~ unemployment
-dfIREUu <- SARvarlistC("unemployment",varlistLNIREU,varlistControl)
+dfIREUu <- regvarlist("unemployment",varlistLNIREU,varlistControl,month1,"SAR")
 names(dfIREUu)[names(dfIREUu)=="coefficientReg"] <- "SAR, age standardised"
-dfIRu <- SARvarlistC("unemployment",varlistLNIR,varlistControl)
+dfIRu <- regvarlist("unemployment",varlistLNIR,varlistControl,"SAR")
 names(dfIRu)[names(dfIRu)=="coefficientReg"] <- "SAR, not age standardised"
-dfIREUOLSu <- OLSvarlistC("unemployment",varlistLNIREU,varlistControl)
+dfIREUOLSu <- regvarlist("unemployment",varlistLNIREU,varlistControl,month1,"OLS")
 names(dfIREUOLSu)[names(dfIREUOLSu)=="coefficientReg"] <- "Lin. Reg., age standardised"
 
 dfIRu <- merge(dfIREUu, dfIRu, by.dfIREUu = month, by.dfIRu = month)
@@ -138,11 +173,11 @@ ggplot(dfIRu, aes(x=month, y=coefficients, group = model, color = model)) +
 
 
 ## Hypothesis I, IR ~ education
-dfIREUe <- SARvarlistC("workersAcadem",varlistLNIREU,varlistControl)
+dfIREUe <- regvarlist("workersAcadem",varlistLNIREU,varlistControl,month1,"SAR")
 names(dfIREUe)[names(dfIREUe)=="coefficientReg"] <- "SAR, age standardised"
-dfIRe <- SARvarlistC("workersAcadem",varlistLNIR,varlistControl)
+dfIRe <- regvarlist("workersAcadem",varlistLNIR,varlistControl,month1,"SAR")
 names(dfIRe)[names(dfIRe)=="coefficientReg"] <- "SAR, not age standardised"
-dfIREUOLSe <- OLSvarlistC("workersAcadem",varlistLNIREU,varlistControl)
+dfIREUOLSe <- regvarlist("workersAcadem",varlistLNIREU,varlistControl,month1,"OLS")
 names(dfIREUOLSe)[names(dfIREUOLSe)=="coefficientReg"] <- "Lin. Reg., age standardised"
 
 dfIRe <- merge(dfIREUe, dfIRe, by.dfIREUe = month, by.dfIRe = month)
@@ -168,11 +203,11 @@ ggplot(dfIRe, aes(x=month, y=coefficients, group = model, color = model)) +
   theme_bw()
 
 ## Hypothesis I, IR ~ income
-dfIREUi <- SARvarlistC("LNmedInc",varlistLNIREU,varlistControl)
+dfIREUi <- regvarlist("LNmedInc",varlistLNIREU,varlistControl,month1,"SAR")
 names(dfIREUi)[names(dfIREUi)=="coefficientReg"] <- "SAR, age standardised"
-dfIRi <- SARvarlistC("LNmedInc",varlistLNIR,varlistControl)
+dfIRi <- regvarlist("LNmedInc",varlistLNIR,varlistControl,month1,"SAR")
 names(dfIRi)[names(dfIRi)=="coefficientReg"] <- "SAR, not age standardised"
-dfIREUOLSi <- OLSvarlistC("LNmedInc",varlistLNIREU,varlistControl)
+dfIREUOLSi <- regvarlist("LNmedInc",varlistLNIREU,varlistControl,month1,"OLS")
 names(dfIREUOLSi)[names(dfIREUOLSi)=="coefficientReg"] <- "Lin. Reg., age standardised"
 
 dfIRi <- merge(dfIREUi, dfIRi, by.dfIREUi = month, by.dfIRi = month)
@@ -308,12 +343,49 @@ ggplot(dfcasesSum, aes(x=month, y=IR, group=1)) +
 ###
 ###############
 
-
-##### To Do: 
-
 #### Robustness checks
 
 ## path dependency
+# OLS model with IR lag
+dfOLSIRGISDpath <- regvarlistP("GISD",varlistLNIREUlag1,varlistControl,varlistLNIREUlag2,month2, "OLS")
+names(dfOLSIRGISDpath)[names(dfOLSIRGISDpath)=="coefficientReg"] <- "OLS, age standardised"
+# SAR model with IR lag
+dfSARIRGISDpath <- regvarlistP("GISD",varlistLNIREUlag1,varlistControl,varlistLNIREUlag2,month2, "SAR")
+names(dfSARIRGISDpath)[names(dfSARIRGISDpath)=="coefficientReg"] <- "OLS, age standardised"
+# OLS model without IR lag
+dfOLSIRGISD <- regvarlist("GISD",varlistLNIREUlag1,varlistControl,month2,"SAR")
+names(dfOLSIRGISD)[names(dfOLSIRGISD)=="coefficientReg"] <- "SAR, age standardised"
+# SAR model without IR lag
+dfSARIRGISD <- regvarlist("GISD",varlistLNIREUlag1,varlistControl,month2,"OLS")
+names(dfSARIRGISD)[names(dfSARIRGISD)=="coefficientReg"] <- "SAR, age standardised"
+
+# merge model data frames with coefficients
+dfIRpath <- merge(dfOLSIRGISDpath, dfSARIRGISDpath, by.dfOLSIRGISDpath = month, by.dfSARIRGISDpath = month)
+dfIRpath <- merge(dfIRpath, dfOLSIRGISD, by.dfIRpath = month, by.dfOLSIRGISD = month)
+dfIRpath <- merge(dfIRpath, dfSARIRGISD, by.dfIRpath = month, by.dfSARIRGISD = month)
+dfIRpath
+dfIRpath <- reshape(dfIRpath, times = c("SAR, age standardised", "SAR, not age standardised", 
+                                  "Lin. Reg., age standardised"), 
+                 varying = c("SAR, age standardised", "SAR, not age standardised", 
+                             "Lin. Reg., age standardised"),  
+                 idvar = "month", v.name="coefficients", direction = "long")
+names(dfIRi)[names(dfIRi)=="time"] <- "model"
+xlabels <- sort(unique(dfIRi$month))
+xlabels[seq(2, length(xlabels), 2)] <- ""
+
+ggplot(dfIRi, aes(x=month, y=coefficients, group = model, color = model)) +
+  geom_line(size = 0.8) +
+  geom_hline(aes(yintercept = 0)) +
+  geom_hline(aes(yintercept = 0)) +
+  scale_x_discrete(labels = xlabels) +
+  labs(title="Effect size comparision",x="Month", y = "Coefficients", 
+       subtitle = "log. Incidence Rates ~ log. median income + pop. Density + state dummies", 
+       caption = "Read: ''In the SAR models, a 1% increase in the county median wage
+                  is associated with a 0.5% decrease in incidence rates as of 
+                  March 21''" )+
+  theme_bw()
+
+
 
 ## other factors
     # further vars, e.g. catholicism, international trade (foreign guests?), gender
@@ -321,15 +393,84 @@ ggplot(dfcasesSum, aes(x=month, y=IR, group=1)) +
 ## population weights for counties / crude aggregated cases 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 #### CFR
 
+## spatial correlation rather weak and not significant throughout the year
+moran.test(dfds$CFREU, weighted_neighbors, zero.policy=T)
+moran.test(dfds$CFREU20.04, weighted_neighbors, zero.policy=T)
+moran.test(dfds$CFREU20.08, weighted_neighbors, zero.policy=T)
+moran.test(dfds$CFREU20.12, weighted_neighbors, zero.policy=T)
+moran.test(dfds$CFREU21.04, weighted_neighbors, zero.policy=T)
+moran.plot(dfds$CFREU, weighted_neighbors, zero.policy=T,xlab="case fatality ratio, age standardised", ylab="spatially lagged CFR")
+moran.plot(dfds$CFREU20.04, weighted_neighbors, zero.policy=T,xlab="case fatality ratio, age standardised", ylab="spatially lagged CFR")
+moran.plot(dfds$CFREU21.04, weighted_neighbors, zero.policy=T,xlab="case fatality ratio, age standardised", ylab="spatially lagged CFR")
+
+
 ## linearity check > no clear trend
+OLSCFREU21.04 <- lm(CFREU21.04 ~ GISD + LNpopDensity+SH+HH+NI+HB+MV+BB+BE+ST+SN+TH+NW+HE+RP+BY+SL, data=dfdd)
+dfOLSCFREU21.04 <- data.frame(OLSCFREU21.04_pred = predict(OLSCFREU21.04, dfdd), GISD=dfdd$GISD)
 
-## proof of little spatial dependence
+ggplot(dfdd, aes(x=GISD, y=CFREU21.04)) +
+  geom_smooth(method='lm', formula= y~x, se=FALSE, aes(color="no controls")) +
+  geom_line(data = dfOLSCFREU21.04, aes(color="controls", x=GISD, y=OLSCFREU21.04_pred)) +
+  geom_point() +
+  labs(title="CFR ~ GISD",x="German Index of Socioeconomic Deprivation", y = "case fatality ratio 21-04") +
+  theme_bw() +
+  scale_color_manual(name="Regressions", 
+                     breaks=c("no controls", "controls"), 
+                     values=c("no controls"="red", "controls"="blue")) 
+# no linear trend observable in CFR data
+ggplot(dfdd, aes(x=GISD, y=CFREU20.04)) +
+  geom_point() +
+  labs(title="CFR ~ GISD",x="German Index of Socioeconomic Deprivation", y = "case fatality ratio 20-04") +
+  theme_bw() 
+ggplot(dfdd, aes(x=GISD, y=CFREU20.08)) +
+  geom_point() +
+  labs(title="CFR ~ GISD",x="German Index of Socioeconomic Deprivation", y = "case fatality ratio 20-08") +
+  theme_bw() 
+ggplot(dfdd, aes(x=GISD, y=CFREU20.12)) +
+  geom_point() +
+  labs(title="CFR ~ GISD",x="German Index of Socioeconomic Deprivation", y = "case fatality ratio 20-12") +
+  theme_bw() 
+ggplot(dfdd, aes(x=GISD, y=CFREU21.04)) +
+  geom_point() +
+  labs(title="CFR ~ GISD",x="German Index of Socioeconomic Deprivation", y = "case fatality ratio 21-04") +
+  theme_bw() 
 
-## lagged CFR
+## -> no linear relationship, no models calculated
 
-## medical variables
+### lagged CFR
+ggplot(dfdd, aes(x=GISD, y=CFREUlag20.04)) +
+  geom_point() +
+  labs(title="CFR ~ GISD",x="German Index of Socioeconomic Deprivation", y = "case fatality ratio 20-04") +
+  theme_bw() 
+ggplot(dfdd, aes(x=GISD, y=CFREUlag20.08)) +
+  geom_point() +
+  labs(title="CFR ~ GISD",x="German Index of Socioeconomic Deprivation", y = "case fatality ratio 20-08") +
+  theme_bw() 
+ggplot(dfdd, aes(x=GISD, y=CFREUlag20.12)) +
+  geom_point() +
+  labs(title="CFR ~ GISD",x="German Index of Socioeconomic Deprivation", y = "case fatality ratio 20-12") +
+  theme_bw() 
+ggplot(dfdd, aes(x=GISD, y=CFREUlag21.04)) +
+  geom_point() +
+  labs(title="CFR ~ GISD",x="German Index of Socioeconomic Deprivation", y = "case fatality ratio 21-04") +
+  theme_bw() 
+
+## -> no linear relationship, no models calculated
+
 
 
 
