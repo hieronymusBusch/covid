@@ -8,11 +8,6 @@
 #                                                        #
 ##########################################################
 
-month1 <- c("20-02", "20-03", "20-04", "20-05", "20-06", "20-07", "20-08", "20-09", 
-           "20-10", "20-11", "20-12", "21-01", "21-02", "21-03", "21-04", "21-05", "21-06")
-month2 <- c("20-03", "20-04", "20-05", "20-06", "20-07", "20-08", "20-09", 
-           "20-10", "20-11", "20-12", "21-01", "21-02", "21-03", "21-04", "21-05", "21-06")
-
 # Function: estimates for each month a new model and saves coefficients for indvar
 # General function for both linear OLS and SAR models: 
   # invar: independent variable which has its coefficients saved
@@ -21,14 +16,14 @@ month2 <- c("20-03", "20-04", "20-05", "20-06", "20-07", "20-08", "20-09",
   # model: either SAR or OLS
   # -> output as df of regression coefficients! / ATE
 
-regvarlist <- function(indvar, depvarList, controlList, month, model){
+regvarlist <- function(indvar, depvarList, controlList, month, model, df){
   dfoutput <- data.frame()
   input2 <- c(indvar,controlList)
   if(model=="SAR"){
     for(a in 1:length(month)){
       inputvar1 <- depvarList[a]
       f <- as.formula(paste(inputvar1,paste(input2, collapse = " + "), sep = "~"))
-      lag = lagsarlm(f, data=dfds, listw = weighted_neighbors,
+      lag = lagsarlm(f, data=df, listw = weighted_neighbors,
                      tol.solve=1.0e-30, zero.policy=T)
       b <- impacts(lag, listw = weighted_neighbors)
       b <- unlist(b)
@@ -40,7 +35,7 @@ regvarlist <- function(indvar, depvarList, controlList, month, model){
     for(a in 1:length(month)) {
       inputvar1 <- depvarList[a]
       f <- as.formula(paste(inputvar1,paste(input2, collapse = " + "), sep = "~"))
-      regmodel <- lm(f,dfdd,na.action=na.omit)
+      regmodel <- lm(f,df,na.action=na.omit)
       b <- summary(regmodel)$coefficients
       c <- data.frame(coefficientReg = b[2, 1])
       dfoutput <- rbind(dfoutput,c)
@@ -57,7 +52,7 @@ regvarlist <- function(indvar, depvarList, controlList, month, model){
   # varList: list of dependent variables (here: IR monthly)
   # controlList: list of controls 
   # model: either SAR or OLS
-regvarlistM <- function(var, depvarList, controlList, month, model){
+regvarlistM <- function(var, depvarList, controlList, month, model, df){
   dfoutput <- data.frame()
   input2 <- c(var,controlList)
   modellist <- list()
@@ -65,7 +60,7 @@ regvarlistM <- function(var, depvarList, controlList, month, model){
          for(a in 1:length(month)) {
            inputvar1 <- depvarList[a]
            f <- as.formula(paste(inputvar1,paste(input2, collapse = " + "), sep = "~"))
-           regmodel <- lm(f,dfdd,na.action=na.omit)
+           regmodel <- lm(f,df,na.action=na.omit)
            b <- summary(regmodel)$coefficients
            c <- data.frame(coefficientReg = b[2, 1])
            dfoutput <- rbind(dfoutput,c)
@@ -77,7 +72,7 @@ regvarlistM <- function(var, depvarList, controlList, month, model){
           for(a in 1:length(month)) {
             inputvar1 <- depvarList[a]
             lag <- lagsarlm(as.formula(paste(inputvar1,paste(input2, collapse = " + "), 
-                                             sep = "~")), data=dfds, listw = weighted_neighbors,
+                                             sep = "~")), data=df, listw = weighted_neighbors,
                             tol.solve=1.0e-30, zero.policy=T)
             b <- impacts(lag, listw = weighted_neighbors)
             b <- unlist(b)
@@ -104,7 +99,7 @@ regvarlistM <- function(var, depvarList, controlList, month, model){
   # model: either SAR or OLS
   # -> output as df of regression coefficients / ATE
   # month2 doesnt contain february, as no previous month to february to control for
-regvarlistP <- function(indvar, depvarList, controlList, indvarList, month, model){
+regvarlistP <- function(indvar, depvarList, controlList, indvarList, month, model, df){
   dfoutput <- data.frame()
   inputvar2 <- c(indvar,controlList)
   if(model=="SAR"){
@@ -112,7 +107,7 @@ regvarlistP <- function(indvar, depvarList, controlList, indvarList, month, mode
       inputvar1 <- depvarList[a]
       inputvar2 <- c(inputvar2, indvarList[a])
       f <- as.formula(paste(inputvar1,paste(inputvar2, collapse = " + "), sep = "~"))
-      lag = lagsarlm(f, data=dfds, listw = weighted_neighbors,
+      lag = lagsarlm(f, data=df, listw = weighted_neighbors,
                      tol.solve=1.0e-30, zero.policy=T)
       b <- impacts(lag, listw = weighted_neighbors)
       b <- unlist(b)
@@ -125,7 +120,7 @@ regvarlistP <- function(indvar, depvarList, controlList, indvarList, month, mode
       inputvar1 <- depvarList[a]
       inputvar2 <- c(inputvar2, indvarList[a])
       f <- as.formula(paste(inputvar1,paste(inputvar2, collapse = " + "), sep = "~"))
-      regmodel <- lm(f,dfdd,na.action=na.omit)
+      regmodel <- lm(f,df,na.action=na.omit)
       b <- summary(regmodel)$coefficients
       c <- data.frame(coefficientReg = b[2, 1])
       dfoutput <- rbind(dfoutput,c)
