@@ -37,7 +37,7 @@ Sys.setenv(lang = "en_US")
 setwd("C:/Users/alexa/Documents/GitHub/covid")
 
 ## read in functions 
-source("functions.R")
+source("rscripts/functions.R")
 
 ## read in variables
 # source("manipulation_ind.R")
@@ -45,15 +45,15 @@ source("functions.R")
 # source("manipulation_depNew.R")
 # source("manipulation_comb.R")
 
-load(file = "dfdd.Rda")  
-load(file = "dfds.Rda")  
-load(file = "dfdsQ.Rda")  
-load(file = "dfddnew.Rda")  
-load(file = "dfdsnew.Rda") 
-load(file = "dfddfnew.Rda")  
-load(file = "dfdsfnew.Rda") 
-load(file = "dfddmnew.Rda")  
-load(file = "dfdsmnew.Rda") 
+load(file = "rdata/dfdd.Rda")  
+load(file = "rdata/dfds.Rda")  
+load(file = "rdata/dfdsQ.Rda")  
+load(file = "rdata/dfddnew.Rda")  
+load(file = "rdata/dfdsnew.Rda") 
+load(file = "rdata/dfddfnew.Rda")  
+load(file = "rdata/dfdsfnew.Rda") 
+load(file = "rdata/dfddmnew.Rda")  
+load(file = "rdata/dfdsmnew.Rda") 
 
 
 

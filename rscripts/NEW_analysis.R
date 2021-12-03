@@ -9,7 +9,7 @@
 #                                                        #
 ##########################################################
 
-source("manipulation.R")
+source("rscripts/manipulation.R")
 
 # expanded time horizon
 varlistLNIRnew <- c("LNIR20.02","LNIR20.03","LNIR20.04","LNIR20.05","LNIR20.06",

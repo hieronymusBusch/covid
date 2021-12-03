@@ -13,8 +13,8 @@
 ## as file to big for github, it needs to be downloaded seperapte via
 ## https://npgeo-corona-npgeo-de.hub.arcgis.com/
 
-load(file = "dfdd.Rda")  
-load(file = "dfds.Rda")  
+load(file = "rdata/dfdd.Rda")  
+load(file = "rdata/dfds.Rda")  
 
 # Reading in RKI COVID-19 data from Germany, reading in Reported Date as Date
 dfrki <- read.csv("C:/Users/alexa/Documents/Uni/RKI-COVID/RKI_COVID19_neu.csv",
@@ -556,11 +556,11 @@ dfrkiaggrf$population <- NULL
 
 # safe data
 dfrkiaggrnew <- dfrkiaggr
-save(dfrkiaggrnew, file = "dfrkiaggrnew.Rda")
+save(dfrkiaggrnew, file = "rdata/dfrkiaggrnew.Rda")
 dfrkiaggrfnew <- dfrkiaggrf
-save(dfrkiaggrfnew, file = "dfrkiaggrfnew.Rda")
+save(dfrkiaggrfnew, file = "rdata/dfrkiaggrfnew.Rda")
 dfrkiaggrmnew <- dfrkiaggrm
-save(dfrkiaggrmnew, file = "dfrkiaggrmnew.Rda")
+save(dfrkiaggrmnew, file = "rdata/dfrkiaggrmnew.Rda")
 
 
 

@@ -470,9 +470,9 @@ dfrkiaggrm$population <- NULL
 dfrkiaggrf$population <- NULL
 
 # safe data
-save(dfrkiaggr, file = "dfrkiaggr.Rda")
-save(dfrkiaggrf, file = "dfrkiaggrf.Rda")
-save(dfrkiaggrm, file = "dfrkiaggrm.Rda")
+save(dfrkiaggr, file = "rdata/dfrkiaggr.Rda")
+save(dfrkiaggrf, file = "rdata/dfrkiaggrf.Rda")
+save(dfrkiaggrm, file = "rdata/dfrkiaggrm.Rda")
 
 
 

@@ -10,14 +10,14 @@
 ##########################################################
 
 ## load data from manipulation_dep/ind
-load(file = "dfdd2.Rda")  
-load(file = "dfds2.Rda")  
-load(file = "dfrkiaggr.Rda")  
-load(file = "dfrkiaggrf.Rda")  
-load(file = "dfrkiaggrm.Rda") 
-load(file = "dfrkiaggrnew.Rda")  
-load(file = "dfrkiaggrfnew.Rda")  
-load(file = "dfrkiaggrmnew.Rda") 
+load(file = "rdata/dfdd2.Rda")  
+load(file = "rdata/dfds2.Rda")  
+load(file = "rdata/dfrkiaggr.Rda")  
+load(file = "rdata/dfrkiaggrf.Rda")  
+load(file = "rdata/dfrkiaggrm.Rda") 
+load(file = "rdata/dfrkiaggrnew.Rda")  
+load(file = "rdata/dfrkiaggrfnew.Rda")  
+load(file = "rdata/dfrkiaggrmnew.Rda") 
 
 ## Combinig aggr data and socioeconomical data
 dfddf <- merge(dfdd2, dfrkiaggrf, by = "KRS")
@@ -79,19 +79,19 @@ q5 <- quantile(dfdsnew$GISD, prob=c(.8))
 dfdsQ <- subset(dfdsnew, dfdsnew$GISD < q1 | dfdsnew$GISD > q5 )
 
 # safe data
-save(dfdsmnew, file = "dfdsmnew.Rda")
-save(dfddmnew, file = "dfddmnew.Rda")
-save(dfdsfnew, file = "dfdsfnew.Rda")
-save(dfddfnew, file = "dfddfnew.Rda")
-save(dfddnew, file = "dfddnew.Rda")
-save(dfdsnew, file = "dfdsnew.Rda")
-save(dfdsmnew, file = "dfdsm.Rda")
-save(dfddm, file = "dfddm.Rda")
-save(dfdsf, file = "dfdsf.Rda")
-save(dfddf, file = "dfddf.Rda")
-save(dfdd, file = "dfdd.Rda")
-save(dfds, file = "dfds.Rda")
-save(dfdsQ, file = "dfdsQ.Rda")
+save(dfdsmnew, file = "rdata/dfdsmnew.Rda")
+save(dfddmnew, file = "rdata/dfddmnew.Rda")
+save(dfdsfnew, file = "rdata/dfdsfnew.Rda")
+save(dfddfnew, file = "rdata/dfddfnew.Rda")
+save(dfddnew, file = "rdata/dfddnew.Rda")
+save(dfdsnew, file = "rdata/dfdsnew.Rda")
+save(dfdsmnew, file = "rdata/dfdsm.Rda")
+save(dfddm, file = "rdata/dfddm.Rda")
+save(dfdsf, file = "rdata/dfdsf.Rda")
+save(dfddf, file = "rdata/dfddf.Rda")
+save(dfdd, file = "rdata/dfdd.Rda")
+save(dfds, file = "rdata/dfds.Rda")
+save(dfdsQ, file = "rdata/dfdsQ.Rda")
 
 
 

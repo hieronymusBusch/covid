@@ -247,8 +247,8 @@ dfdd2 <- dfdd
 dfds2 <- dfds
 
 ## safe data
-save(dfdd2, file = "dfdd2.Rda")
-save(dfds2, file = "dfds2.Rda")
+save(dfdd2, file = "rdata/dfdd2.Rda")
+save(dfds2, file = "rdata/dfds2.Rda")
 
 
 
