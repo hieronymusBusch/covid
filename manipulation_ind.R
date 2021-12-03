@@ -1,6 +1,5 @@
 ##########################################################
 #                                                        #
-#                                                        #
 # 2021/10                                                #
 #                                                        #
 # Alexander Busch (a.busch@lse.ac.uk)                    #
@@ -91,7 +90,6 @@ dfgisd <- dfgisd[-c(25),]
 dfgisd[,"population"] <- NULL
 # Combine dfdd and dfgisd 
 dfdd <- merge(dfdd, dfgisd, by = "KRS")
-
 
 ## dfeu2 contains population + factor to age-standardise (EU Standard Population 2013)
 dfeu <- read_excel("data/PROJ_19RP3__custom_13386841632821589108.xlsx", sheet = 3, range = "A11:CY413", col_types = c("guess", rep("numeric",102)))
@@ -228,6 +226,29 @@ dfds <- st_read("data/shapefiles/250_NUTS3.shp")
 dfds <- subset(dfds, select = c(3,4))
 dfds <- dfds[-c(402:428),]
 
+# logs for all data
+dfdd$LNhhInc <- log(dfdd$hhInc)
+dfdd$LNmedInc <- log(dfdd$medInc)
+dfdd$LNpopPerDoc <- log(dfdd$popPerDoc) 
+dfdd$LNpopDensity <- log(dfdd$popDensity)
+dfdd$LNbusinessTax <- log(dfdd$businessTax)
+dfdd$LNgrossInc <- log(dfdd$grossInc)
+
+
+# two counties merged in July 2021, so their dfdd measures and gisd are combined by population weighted avg
+population <- dfdd[384,38] + dfdd[387,38]
+dfdd[c(384,387),c(5:19,37,39:75)] <- (dfdd[384,c(5:19,37,39:75)]*dfdd[384,38]+
+                             dfdd[387,c(5:19,37,39:75)]*dfdd[387,38]) / population
+
+dfdd[c(384,387),38] <- population
+
+# rename in order not to confuse them with later final data sets including covid variables
+dfdd2 <- dfdd
+dfds2 <- dfds
+
+## safe data
+save(dfdd2, file = "dfdd2.Rda")
+save(dfds2, file = "dfds2.Rda")
 
 
 

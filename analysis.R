@@ -10,7 +10,6 @@
 ##########################################################
 
 source("manipulation.R")
-library(gridExtra)
 
 # Varlist for Models
 varlistLNIR <- c("LNIR20.02","LNIR20.03","LNIR20.04","LNIR20.05","LNIR20.06",
@@ -160,17 +159,17 @@ ggplot(dfdd, aes(x=GISD, y=LNIREU21.04)) +
 
 
 #### model GISD
-listIRGISD1 <- regvarlistM("GISD",varlistLNIREU,varlistControl,month1,"SAR",dfds)
+listIRGISD1 <- regvarlistM("GISD",varlistLNIREU,varlistControl,month,"SAR",dfds)
 dfIRGISD1 <- as.data.frame(listIRGISD1[1:2])
 modelsIRGISD1 <- listIRGISD1[3:19]
 names(dfIRGISD1)[names(dfIRGISD1)=="coefficientReg"] <- "SAR, age standardised"
 
-listIRGISD2 <- regvarlistM("GISD",varlistLNIR,varlistControl,month1,"SAR",dfds)
+listIRGISD2 <- regvarlistM("GISD",varlistLNIR,varlistControl,month,"SAR",dfds)
 dfIRGISD2 <- as.data.frame(listIRGISD2[1:2])
 modelsIRGISD2 <- listIRGISD2[3:19]
 names(dfIRGISD2)[names(dfIRGISD2)=="coefficientReg"] <- "SAR, not age standardised"
 
-listIRGISD3 <- regvarlistM("GISD",varlistLNIREU,varlistControl,month1,"OLS",dfds)
+listIRGISD3 <- regvarlistM("GISD",varlistLNIREU,varlistControl,month,"OLS",dfds)
 dfIRGISD3 <- as.data.frame(listIRGISD3[1:2])
 modelsIRGISD3 <- listIRGISD3[3:19]
 names(dfIRGISD3)[names(dfIRGISD3)=="coefficientReg"] <- "Lin. Reg., age standardised"
@@ -673,6 +672,53 @@ ggplot(dfIRsum, aes(x=month, y=coefficients, group = model, color = model)) +
                   county has a 0.5% to 1.5% higher incidence rate compared
                  to the least socioeconomicly deprived county as of March 21''") +
   theme_bw()
+
+## differentiated by gender
+# OLS model male 
+dfOLSIRGISDm <- regvarlist("GISD",varlistLNIREU,varlistControl,month1, "OLS",dfdsm)
+names(dfOLSIRGISDm)[names(dfOLSIRGISDm)=="coefficientReg"] <- "OLS, age stnd, male"
+dfOLSIRGISDm
+# SAR model male 
+dfSARIRGISDm <- regvarlist("GISD",varlistLNIREU,varlistControl,month1, "SAR",dfdsm)
+names(dfSARIRGISDm)[names(dfSARIRGISDm)=="coefficientReg"] <- "SAR, age stnd, male"
+dfSARIRGISDm
+# OLS model female 
+dfOLSIRGISDf <- regvarlist("GISD",varlistLNIREU,varlistControl,month1,"SAR",dfdsf)
+names(dfOLSIRGISDf)[names(dfOLSIRGISDf)=="coefficientReg"] <- "SAR, age stnd, female"
+dfOLSIRGISDf
+# SAR model female
+dfSARIRGISDf <- regvarlist("GISD",varlistLNIREU,varlistControl,month1,"OLS",dfdsf)
+names(dfSARIRGISDf)[names(dfSARIRGISDf)=="coefficientReg"] <- "OLS, age stnd, female"
+dfSARIRGISDf
+
+# merge model data frames with coefficients
+dfIRgender <- merge(dfOLSIRGISDm, dfSARIRGISDm, by = "month")
+dfIRgender <- merge(dfIRgender, dfOLSIRGISDf, by = "month")
+dfIRgender <- merge(dfIRgender, dfSARIRGISDf, by = "month")
+dfIRgender
+dfIRgender <- reshape(dfIRgender, times = c("SAR, age stnd, male", "OLS, age stnd, male", 
+                                      "OLS, age stnd, female", "SAR, age stnd, female"), 
+                   varying = c("SAR, age stnd, male", "OLS, age stnd, male", 
+                               "OLS, age stnd, female", "SAR, age stnd, female"),  
+                   idvar = "month", v.name="coefficients", direction = "long")
+names(dfIRgender)[names(dfIRgender)=="time"] <- "model"
+xlabels <- sort(unique(dfIRgender$month))
+xlabels[seq(2, length(xlabels), 2)] <- " "
+
+ggplot(dfIRgender, aes(x=month, y=coefficients, group = model, color = model)) +
+  geom_line(size = 0.8,aes(linetype=model,color=model)) +
+  geom_hline(aes(yintercept = 0)) +
+  scale_linetype_manual(values=c("twodash", "twodash", "solid", "solid")) +
+  scale_color_manual(values=c("blue", "red", "blue", "red")) +
+  scale_x_discrete(labels = xlabels) +
+  labs(title="Effect size comparision",x="Month", y = "Coefficients", 
+       subtitle = "log. Incidence Rates ~ German Index of socioeconomic Deprivation + pop. Density + state dummies", 
+       caption = "Read: ''The most socioeconomicly deprived
+                  county has a 1% to 1.5% higher incidence rate compared
+                 to the least socioeconomicly deprived county as of March 21''") +
+  theme_bw()
+
+
 
 
 

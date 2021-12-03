@@ -1,6 +1,5 @@
 ##########################################################
 #                                                        #
-#                                                        #
 # 2021/10                                                #
 #                                                        #
 # Alexander Busch (a.busch@lse.ac.uk)                    #
@@ -19,6 +18,7 @@ library(ggpubr)
 library(stargazer)
 library(spdep)
 library(spatialreg)
+library(gridExtra)
 
 # tidyverse
 library(dplyr)
@@ -40,8 +40,20 @@ setwd("C:/Users/alexa/Documents/GitHub/covid")
 source("functions.R")
 
 ## read in variables
-source("manipulation_ind.R")
-source("manipulation_dep.R")
-source("manipulation_comb.R")
+# source("manipulation_ind.R")
+# source("manipulation_dep.R")
+# source("manipulation_depNew.R")
+# source("manipulation_comb.R")
+
+load(file = "dfdd.Rda")  
+load(file = "dfds.Rda")  
+load(file = "dfdsQ.Rda")  
+load(file = "dfddnew.Rda")  
+load(file = "dfdsnew.Rda") 
+load(file = "dfddfnew.Rda")  
+load(file = "dfdsfnew.Rda") 
+load(file = "dfddmnew.Rda")  
+load(file = "dfdsmnew.Rda") 
+
 
 

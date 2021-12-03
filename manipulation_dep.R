@@ -248,8 +248,231 @@ for(i in 37:53) {
 dfrkiaggrm[is.na(dfrkiaggrm)] <- 0
 
 
+dfpop <- dfdd[, c("KRS", "population")]
+dfrkiaggr <- merge(dfrkiaggr, dfpop, by = "KRS")
+dfrkiaggrf <- merge(dfrkiaggrf, dfpop, by = "KRS")
+dfrkiaggrm <- merge(dfrkiaggrm, dfpop, by = "KRS")
+
+# CFR with 1 month lag
+dfrkiaggr$CFRlag20.04 <- (dfrkiaggr$deaths20.04 / dfrkiaggr$cases20.03)
+dfrkiaggr$CFRlag20.05 <- (dfrkiaggr$deaths20.05 / dfrkiaggr$cases20.04)
+dfrkiaggr$CFRlag20.06 <- (dfrkiaggr$deaths20.06 / dfrkiaggr$cases20.05)
+dfrkiaggr$CFRlag20.07 <- (dfrkiaggr$deaths20.07 / dfrkiaggr$cases20.06)
+dfrkiaggr$CFRlag20.08 <- (dfrkiaggr$deaths20.08 / dfrkiaggr$cases20.07)
+dfrkiaggr$CFRlag20.09 <- (dfrkiaggr$deaths20.09 / dfrkiaggr$cases20.08)
+dfrkiaggr$CFRlag20.10 <- (dfrkiaggr$deaths20.10 / dfrkiaggr$cases20.09)
+dfrkiaggr$CFRlag20.11 <- (dfrkiaggr$deaths20.11 / dfrkiaggr$cases20.10)
+dfrkiaggr$CFRlag20.12 <- (dfrkiaggr$deaths20.12 / dfrkiaggr$cases20.11)
+dfrkiaggr$CFRlag21.01 <- (dfrkiaggr$deaths21.01 / dfrkiaggr$cases20.12)
+dfrkiaggr$CFRlag21.02 <- (dfrkiaggr$deaths21.02 / dfrkiaggr$cases21.01)
+dfrkiaggr$CFRlag21.03 <- (dfrkiaggr$deaths21.03 / dfrkiaggr$cases21.02)
+dfrkiaggr$CFRlag21.04 <- (dfrkiaggr$deaths21.04 / dfrkiaggr$cases21.03)
+dfrkiaggr$CFRlag21.05 <- (dfrkiaggr$deaths21.05 / dfrkiaggr$cases21.04)
+dfrkiaggr$CFRlag21.06 <- (dfrkiaggr$deaths21.06 / dfrkiaggr$cases21.05)
+
+dfrkiaggr$CFREUlag20.04 <- (dfrkiaggr$deathsEU20.04 / dfrkiaggr$IREU20.03)
+dfrkiaggr$CFREUlag20.05 <- (dfrkiaggr$deathsEU20.05 / dfrkiaggr$IREU20.04)
+dfrkiaggr$CFREUlag20.06 <- (dfrkiaggr$deathsEU20.06 / dfrkiaggr$IREU20.05)
+dfrkiaggr$CFREUlag20.07 <- (dfrkiaggr$deathsEU20.07 / dfrkiaggr$IREU20.06)
+dfrkiaggr$CFREUlag20.08 <- (dfrkiaggr$deathsEU20.08 / dfrkiaggr$IREU20.07)
+dfrkiaggr$CFREUlag20.09 <- (dfrkiaggr$deathsEU20.09 / dfrkiaggr$IREU20.08)
+dfrkiaggr$CFREUlag20.10 <- (dfrkiaggr$deathsEU20.10 / dfrkiaggr$IREU20.09)
+dfrkiaggr$CFREUlag20.11 <- (dfrkiaggr$deathsEU20.11 / dfrkiaggr$IREU20.10)
+dfrkiaggr$CFREUlag20.12 <- (dfrkiaggr$deathsEU20.12 / dfrkiaggr$IREU20.11)
+dfrkiaggr$CFREUlag21.01 <- (dfrkiaggr$deathsEU21.01 / dfrkiaggr$IREU20.12)
+dfrkiaggr$CFREUlag21.02 <- (dfrkiaggr$deathsEU21.02 / dfrkiaggr$IREU21.01)
+dfrkiaggr$CFREUlag21.03 <- (dfrkiaggr$deathsEU21.03 / dfrkiaggr$IREU21.02)
+dfrkiaggr$CFREUlag21.04 <- (dfrkiaggr$deathsEU21.04 / dfrkiaggr$IREU21.03)
+dfrkiaggr$CFREUlag21.05 <- (dfrkiaggr$deathsEU21.05 / dfrkiaggr$IREU21.04)
+dfrkiaggr$CFREUlag21.06 <- (dfrkiaggr$deathsEU21.06 / dfrkiaggr$IREU21.05)
+
+# recode undefined (x/0) CFR to 0 as described in Thesis
+dfrkiaggr[is.na(dfrkiaggr)] <- 0
+dfrkiaggr[dfrkiaggr == Inf] <- 0
+
+# logs 
+dfrkiaggr$LNIR20.02 <- log(dfrkiaggr$IR20.02)
+dfrkiaggr$LNIR20.03 <- log(dfrkiaggr$IR20.03)
+dfrkiaggr$LNIR20.04 <- log(dfrkiaggr$IR20.04)
+dfrkiaggr$LNIR20.05 <- log(dfrkiaggr$IR20.05)
+dfrkiaggr$LNIR20.06 <- log(dfrkiaggr$IR20.06)
+dfrkiaggr$LNIR20.07 <- log(dfrkiaggr$IR20.07)
+dfrkiaggr$LNIR20.08 <- log(dfrkiaggr$IR20.08)
+dfrkiaggr$LNIR20.09 <- log(dfrkiaggr$IR20.09)
+dfrkiaggr$LNIR20.10 <- log(dfrkiaggr$IR20.10)
+dfrkiaggr$LNIR20.11 <- log(dfrkiaggr$IR20.11)
+dfrkiaggr$LNIR20.12 <- log(dfrkiaggr$IR20.12)
+dfrkiaggr$LNIR21.01 <- log(dfrkiaggr$IR21.01)
+dfrkiaggr$LNIR21.02 <- log(dfrkiaggr$IR21.02)
+dfrkiaggr$LNIR21.03 <- log(dfrkiaggr$IR21.03)
+dfrkiaggr$LNIR21.04 <- log(dfrkiaggr$IR21.04)
+dfrkiaggr$LNIR21.05 <- log(dfrkiaggr$IR21.05)
+dfrkiaggr$LNIR21.06 <- log(dfrkiaggr$IR21.06)
+dfrkiaggr$LNIR <- log(dfrkiaggr$IR)
+
+dfrkiaggr$LNIREU20.02 <- log(dfrkiaggr$IREU20.02)
+dfrkiaggr$LNIREU20.03 <- log(dfrkiaggr$IREU20.03)
+dfrkiaggr$LNIREU20.04 <- log(dfrkiaggr$IREU20.04)
+dfrkiaggr$LNIREU20.05 <- log(dfrkiaggr$IREU20.05)
+dfrkiaggr$LNIREU20.06 <- log(dfrkiaggr$IREU20.06)
+dfrkiaggr$LNIREU20.07 <- log(dfrkiaggr$IREU20.07)
+dfrkiaggr$LNIREU20.08 <- log(dfrkiaggr$IREU20.08)
+dfrkiaggr$LNIREU20.09 <- log(dfrkiaggr$IREU20.09)
+dfrkiaggr$LNIREU20.10 <- log(dfrkiaggr$IREU20.10)
+dfrkiaggr$LNIREU20.11 <- log(dfrkiaggr$IREU20.11)
+dfrkiaggr$LNIREU20.12 <- log(dfrkiaggr$IREU20.12)
+dfrkiaggr$LNIREU21.01 <- log(dfrkiaggr$IREU21.01)
+dfrkiaggr$LNIREU21.02 <- log(dfrkiaggr$IREU21.02)
+dfrkiaggr$LNIREU21.03 <- log(dfrkiaggr$IREU21.03)
+dfrkiaggr$LNIREU21.04 <- log(dfrkiaggr$IREU21.04)
+dfrkiaggr$LNIREU21.05 <- log(dfrkiaggr$IREU21.05)
+dfrkiaggr$LNIREU21.06 <- log(dfrkiaggr$IREU21.06)
+dfrkiaggr$LNIREU <- log(dfrkiaggr$IREU)
+
+# Sum of previous cases in county as proxy for immune people
+dfrkiaggr$scases20.02 <- (dfrkiaggr$cases20.02) / dfrkiaggr$population
+dfrkiaggr$scases20.03 <- (dfrkiaggr$cases20.03) / dfrkiaggr$population + dfrkiaggr$scases20.02 
+dfrkiaggr$scases20.04 <- (dfrkiaggr$cases20.04) / dfrkiaggr$population + dfrkiaggr$scases20.03 
+dfrkiaggr$scases20.05 <- (dfrkiaggr$cases20.05) / dfrkiaggr$population + dfrkiaggr$scases20.04 
+dfrkiaggr$scases20.06 <- (dfrkiaggr$cases20.06) / dfrkiaggr$population + dfrkiaggr$scases20.05 
+dfrkiaggr$scases20.07 <- (dfrkiaggr$cases20.07) / dfrkiaggr$population + dfrkiaggr$scases20.06 
+dfrkiaggr$scases20.08 <- (dfrkiaggr$cases20.08) / dfrkiaggr$population + dfrkiaggr$scases20.07 
+dfrkiaggr$scases20.09 <- (dfrkiaggr$cases20.09) / dfrkiaggr$population + dfrkiaggr$scases20.08 
+dfrkiaggr$scases20.10 <- (dfrkiaggr$cases20.10) / dfrkiaggr$population + dfrkiaggr$scases20.09 
+dfrkiaggr$scases20.11 <- (dfrkiaggr$cases20.11) / dfrkiaggr$population + dfrkiaggr$scases20.10 
+dfrkiaggr$scases20.12 <- (dfrkiaggr$cases20.12) / dfrkiaggr$population + dfrkiaggr$scases20.11 
+dfrkiaggr$scases21.01 <- (dfrkiaggr$cases21.01) / dfrkiaggr$population + dfrkiaggr$scases20.12 
+dfrkiaggr$scases21.02 <- (dfrkiaggr$cases21.02) / dfrkiaggr$population + dfrkiaggr$scases21.01 
+dfrkiaggr$scases21.03 <- (dfrkiaggr$cases21.03) / dfrkiaggr$population + dfrkiaggr$scases21.02 
+dfrkiaggr$scases21.04 <- (dfrkiaggr$cases21.04) / dfrkiaggr$population + dfrkiaggr$scases21.03 
+dfrkiaggr$scases21.05 <- (dfrkiaggr$cases21.05) / dfrkiaggr$population + dfrkiaggr$scases21.04 
+dfrkiaggr$scases21.06 <- (dfrkiaggr$cases21.06) / dfrkiaggr$population + dfrkiaggr$scases21.05 
+
+# logs 
+dfrkiaggrf$LNIR20.02 <- log(dfrkiaggrf$IR20.02)
+dfrkiaggrf$LNIR20.03 <- log(dfrkiaggrf$IR20.03)
+dfrkiaggrf$LNIR20.04 <- log(dfrkiaggrf$IR20.04)
+dfrkiaggrf$LNIR20.05 <- log(dfrkiaggrf$IR20.05)
+dfrkiaggrf$LNIR20.06 <- log(dfrkiaggrf$IR20.06)
+dfrkiaggrf$LNIR20.07 <- log(dfrkiaggrf$IR20.07)
+dfrkiaggrf$LNIR20.08 <- log(dfrkiaggrf$IR20.08)
+dfrkiaggrf$LNIR20.09 <- log(dfrkiaggrf$IR20.09)
+dfrkiaggrf$LNIR20.10 <- log(dfrkiaggrf$IR20.10)
+dfrkiaggrf$LNIR20.11 <- log(dfrkiaggrf$IR20.11)
+dfrkiaggrf$LNIR20.12 <- log(dfrkiaggrf$IR20.12)
+dfrkiaggrf$LNIR21.01 <- log(dfrkiaggrf$IR21.01)
+dfrkiaggrf$LNIR21.02 <- log(dfrkiaggrf$IR21.02)
+dfrkiaggrf$LNIR21.03 <- log(dfrkiaggrf$IR21.03)
+dfrkiaggrf$LNIR21.04 <- log(dfrkiaggrf$IR21.04)
+dfrkiaggrf$LNIR21.05 <- log(dfrkiaggrf$IR21.05)
+dfrkiaggrf$LNIR21.06 <- log(dfrkiaggrf$IR21.06)
+dfrkiaggrf$LNIR <- log(dfrkiaggrf$IR)
+
+dfrkiaggrf$LNIREU20.02 <- log(dfrkiaggrf$IREU20.02)
+dfrkiaggrf$LNIREU20.03 <- log(dfrkiaggrf$IREU20.03)
+dfrkiaggrf$LNIREU20.04 <- log(dfrkiaggrf$IREU20.04)
+dfrkiaggrf$LNIREU20.05 <- log(dfrkiaggrf$IREU20.05)
+dfrkiaggrf$LNIREU20.06 <- log(dfrkiaggrf$IREU20.06)
+dfrkiaggrf$LNIREU20.07 <- log(dfrkiaggrf$IREU20.07)
+dfrkiaggrf$LNIREU20.08 <- log(dfrkiaggrf$IREU20.08)
+dfrkiaggrf$LNIREU20.09 <- log(dfrkiaggrf$IREU20.09)
+dfrkiaggrf$LNIREU20.10 <- log(dfrkiaggrf$IREU20.10)
+dfrkiaggrf$LNIREU20.11 <- log(dfrkiaggrf$IREU20.11)
+dfrkiaggrf$LNIREU20.12 <- log(dfrkiaggrf$IREU20.12)
+dfrkiaggrf$LNIREU21.01 <- log(dfrkiaggrf$IREU21.01)
+dfrkiaggrf$LNIREU21.02 <- log(dfrkiaggrf$IREU21.02)
+dfrkiaggrf$LNIREU21.03 <- log(dfrkiaggrf$IREU21.03)
+dfrkiaggrf$LNIREU21.04 <- log(dfrkiaggrf$IREU21.04)
+dfrkiaggrf$LNIREU21.05 <- log(dfrkiaggrf$IREU21.05)
+dfrkiaggrf$LNIREU21.06 <- log(dfrkiaggrf$IREU21.06)
+dfrkiaggrf$LNIREU <- log(dfrkiaggrf$IREU)
+
+# Sum of previous cases in county as proxy for immune people
+dfrkiaggrf$scases20.02 <- (dfrkiaggrf$cases20.02) / dfrkiaggrf$population
+dfrkiaggrf$scases20.03 <- (dfrkiaggrf$cases20.03) / dfrkiaggrf$population + dfrkiaggrf$scases20.02 
+dfrkiaggrf$scases20.04 <- (dfrkiaggrf$cases20.04) / dfrkiaggrf$population + dfrkiaggrf$scases20.03 
+dfrkiaggrf$scases20.05 <- (dfrkiaggrf$cases20.05) / dfrkiaggrf$population + dfrkiaggrf$scases20.04 
+dfrkiaggrf$scases20.06 <- (dfrkiaggrf$cases20.06) / dfrkiaggrf$population + dfrkiaggrf$scases20.05 
+dfrkiaggrf$scases20.07 <- (dfrkiaggrf$cases20.07) / dfrkiaggrf$population + dfrkiaggrf$scases20.06 
+dfrkiaggrf$scases20.08 <- (dfrkiaggrf$cases20.08) / dfrkiaggrf$population + dfrkiaggrf$scases20.07 
+dfrkiaggrf$scases20.09 <- (dfrkiaggrf$cases20.09) / dfrkiaggrf$population + dfrkiaggrf$scases20.08 
+dfrkiaggrf$scases20.10 <- (dfrkiaggrf$cases20.10) / dfrkiaggrf$population + dfrkiaggrf$scases20.09 
+dfrkiaggrf$scases20.11 <- (dfrkiaggrf$cases20.11) / dfrkiaggrf$population + dfrkiaggrf$scases20.10 
+dfrkiaggrf$scases20.12 <- (dfrkiaggrf$cases20.12) / dfrkiaggrf$population + dfrkiaggrf$scases20.11 
+dfrkiaggrf$scases21.01 <- (dfrkiaggrf$cases21.01) / dfrkiaggrf$population + dfrkiaggrf$scases20.12 
+dfrkiaggrf$scases21.02 <- (dfrkiaggrf$cases21.02) / dfrkiaggrf$population + dfrkiaggrf$scases21.01 
+dfrkiaggrf$scases21.03 <- (dfrkiaggrf$cases21.03) / dfrkiaggrf$population + dfrkiaggrf$scases21.02 
+dfrkiaggrf$scases21.04 <- (dfrkiaggrf$cases21.04) / dfrkiaggrf$population + dfrkiaggrf$scases21.03 
+dfrkiaggrf$scases21.05 <- (dfrkiaggrf$cases21.05) / dfrkiaggrf$population + dfrkiaggrf$scases21.04 
+dfrkiaggrf$scases21.06 <- (dfrkiaggrf$cases21.06) / dfrkiaggrf$population + dfrkiaggrf$scases21.05 
+
+# logs 
+dfrkiaggrm$LNIR20.02 <- log(dfrkiaggrm$IR20.02)
+dfrkiaggrm$LNIR20.03 <- log(dfrkiaggrm$IR20.03)
+dfrkiaggrm$LNIR20.04 <- log(dfrkiaggrm$IR20.04)
+dfrkiaggrm$LNIR20.05 <- log(dfrkiaggrm$IR20.05)
+dfrkiaggrm$LNIR20.06 <- log(dfrkiaggrm$IR20.06)
+dfrkiaggrm$LNIR20.07 <- log(dfrkiaggrm$IR20.07)
+dfrkiaggrm$LNIR20.08 <- log(dfrkiaggrm$IR20.08)
+dfrkiaggrm$LNIR20.09 <- log(dfrkiaggrm$IR20.09)
+dfrkiaggrm$LNIR20.10 <- log(dfrkiaggrm$IR20.10)
+dfrkiaggrm$LNIR20.11 <- log(dfrkiaggrm$IR20.11)
+dfrkiaggrm$LNIR20.12 <- log(dfrkiaggrm$IR20.12)
+dfrkiaggrm$LNIR21.01 <- log(dfrkiaggrm$IR21.01)
+dfrkiaggrm$LNIR21.02 <- log(dfrkiaggrm$IR21.02)
+dfrkiaggrm$LNIR21.03 <- log(dfrkiaggrm$IR21.03)
+dfrkiaggrm$LNIR21.04 <- log(dfrkiaggrm$IR21.04)
+dfrkiaggrm$LNIR21.05 <- log(dfrkiaggrm$IR21.05)
+dfrkiaggrm$LNIR21.06 <- log(dfrkiaggrm$IR21.06)
+dfrkiaggrm$LNIR <- log(dfrkiaggrm$IR)
+
+dfrkiaggrm$LNIREU20.02 <- log(dfrkiaggrm$IREU20.02)
+dfrkiaggrm$LNIREU20.03 <- log(dfrkiaggrm$IREU20.03)
+dfrkiaggrm$LNIREU20.04 <- log(dfrkiaggrm$IREU20.04)
+dfrkiaggrm$LNIREU20.05 <- log(dfrkiaggrm$IREU20.05)
+dfrkiaggrm$LNIREU20.06 <- log(dfrkiaggrm$IREU20.06)
+dfrkiaggrm$LNIREU20.07 <- log(dfrkiaggrm$IREU20.07)
+dfrkiaggrm$LNIREU20.08 <- log(dfrkiaggrm$IREU20.08)
+dfrkiaggrm$LNIREU20.09 <- log(dfrkiaggrm$IREU20.09)
+dfrkiaggrm$LNIREU20.10 <- log(dfrkiaggrm$IREU20.10)
+dfrkiaggrm$LNIREU20.11 <- log(dfrkiaggrm$IREU20.11)
+dfrkiaggrm$LNIREU20.12 <- log(dfrkiaggrm$IREU20.12)
+dfrkiaggrm$LNIREU21.01 <- log(dfrkiaggrm$IREU21.01)
+dfrkiaggrm$LNIREU21.02 <- log(dfrkiaggrm$IREU21.02)
+dfrkiaggrm$LNIREU21.03 <- log(dfrkiaggrm$IREU21.03)
+dfrkiaggrm$LNIREU21.04 <- log(dfrkiaggrm$IREU21.04)
+dfrkiaggrm$LNIREU21.05 <- log(dfrkiaggrm$IREU21.05)
+dfrkiaggrm$LNIREU21.06 <- log(dfrkiaggrm$IREU21.06)
+dfrkiaggrm$LNIREU <- log(dfrkiaggrm$IREU)
+
+# Sum of previous cases in county as proxy for immune people
+dfrkiaggrm$scases20.02 <- (dfrkiaggrm$cases20.02) / dfrkiaggrm$population
+dfrkiaggrm$scases20.03 <- (dfrkiaggrm$cases20.03) / dfrkiaggrm$population + dfrkiaggrm$scases20.02 
+dfrkiaggrm$scases20.04 <- (dfrkiaggrm$cases20.04) / dfrkiaggrm$population + dfrkiaggrm$scases20.03 
+dfrkiaggrm$scases20.05 <- (dfrkiaggrm$cases20.05) / dfrkiaggrm$population + dfrkiaggrm$scases20.04 
+dfrkiaggrm$scases20.06 <- (dfrkiaggrm$cases20.06) / dfrkiaggrm$population + dfrkiaggrm$scases20.05 
+dfrkiaggrm$scases20.07 <- (dfrkiaggrm$cases20.07) / dfrkiaggrm$population + dfrkiaggrm$scases20.06 
+dfrkiaggrm$scases20.08 <- (dfrkiaggrm$cases20.08) / dfrkiaggrm$population + dfrkiaggrm$scases20.07 
+dfrkiaggrm$scases20.09 <- (dfrkiaggrm$cases20.09) / dfrkiaggrm$population + dfrkiaggrm$scases20.08 
+dfrkiaggrm$scases20.10 <- (dfrkiaggrm$cases20.10) / dfrkiaggrm$population + dfrkiaggrm$scases20.09 
+dfrkiaggrm$scases20.11 <- (dfrkiaggrm$cases20.11) / dfrkiaggrm$population + dfrkiaggrm$scases20.10 
+dfrkiaggrm$scases20.12 <- (dfrkiaggrm$cases20.12) / dfrkiaggrm$population + dfrkiaggrm$scases20.11 
+dfrkiaggrm$scases21.01 <- (dfrkiaggrm$cases21.01) / dfrkiaggrm$population + dfrkiaggrm$scases20.12 
+dfrkiaggrm$scases21.02 <- (dfrkiaggrm$cases21.02) / dfrkiaggrm$population + dfrkiaggrm$scases21.01 
+dfrkiaggrm$scases21.03 <- (dfrkiaggrm$cases21.03) / dfrkiaggrm$population + dfrkiaggrm$scases21.02 
+dfrkiaggrm$scases21.04 <- (dfrkiaggrm$cases21.04) / dfrkiaggrm$population + dfrkiaggrm$scases21.03 
+dfrkiaggrm$scases21.05 <- (dfrkiaggrm$cases21.05) / dfrkiaggrm$population + dfrkiaggrm$scases21.04 
+dfrkiaggrm$scases21.06 <- (dfrkiaggrm$cases21.06) / dfrkiaggrm$population + dfrkiaggrm$scases21.05 
 
 
+dfrkiaggr$population <- NULL
+dfrkiaggrm$population <- NULL
+dfrkiaggrf$population <- NULL
+
+# safe data
+save(dfrkiaggr, file = "dfrkiaggr.Rda")
+save(dfrkiaggrf, file = "dfrkiaggrf.Rda")
+save(dfrkiaggrm, file = "dfrkiaggrm.Rda")
 
 
 
