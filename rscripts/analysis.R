@@ -56,8 +56,10 @@ month2 <- c("20-03", "20-04", "20-05", "20-06", "20-07", "20-08", "20-09",
 # Create lists needed for analysis
 neighbors <- poly2nb(dfds)
 weighted_neighbors <- nb2listw(neighbors, zero.policy=T)
+weighted_neighbors
 
 ### Analysis
+
 
 ## Incidence Rates
 
@@ -126,15 +128,74 @@ hist
 grid.arrange(hist, hist20.02, hist20.04, hist20.08, hist20.12, hist21.04, ncol=2, nrow=3)
 # > except for February, normal distribution can be assumed, maybe a bit skewed to right? 
 
-## Test for spatial Autocorrelation in data
-moran.test(dfds$IREU, weighted_neighbors, zero.policy=T)
-moran.test(dfds$IREU20.04, weighted_neighbors, zero.policy=T)
-moran.test(dfds$IREU20.08, weighted_neighbors, zero.policy=T)
-moran.test(dfds$IREU20.12, weighted_neighbors, zero.policy=T)
-moran.test(dfds$IREU21.04, weighted_neighbors, zero.policy=T)
+## Test for spatial Autocorrelation in age standardised incidence rates
+IREU <- c("IREU20.02","IREU20.03","IREU20.04","IREU20.05","IREU20.06",
+                           "IREU20.07","IREU20.08","IREU20.09","IREU20.10",
+                           "IREU20.11","IREU20.12","IREU21.01","IREU21.02",
+                           "IREU21.03","IREU21.04","IREU21.05","IREU21.06")
+for(i in 1:17){
+  a <- moran.test(dfds[[IREU[i]]], weighted_neighbors, zero.policy=T,alternative="two.sided")
+  a <- a[2:3]
+  a <- as.data.frame(a)
+  a <- as.data.frame(a[1,])
+  ifelse(i==1,
+         dfmoransIREU <- a, 
+         dfmoransIREU <- rbind(dfmoransIREU,a)
+         )
+}
+colnames(dfmoransIREU) <- c("p-value", "Moran's I")
+dfmoransIREU <- round(dfmoransIREU, digits = 5)
+dfmoransIREU$month <- month1
+dfmoransIREU <- dfmoransIREU[,c(3,2,1)]
+rownames(dfmoransIREU) <- c()
+stargazer(dfmoransIREU, summary = FALSE, type = "latex", digits = 5)
+
 moran.plot(dfds$IREU, weighted_neighbors, zero.policy=T,xlab="incidence rates, age standardised", ylab="spatially lagged IR")
 moran.plot(dfds$IREU20.04, weighted_neighbors, zero.policy=T,xlab="incidence rates, age standardised", ylab="spatially lagged IR")
 moran.plot(dfds$IREU21.04, weighted_neighbors, zero.policy=T,xlab="incidence rates, age standardised", ylab="spatially lagged IR")
+
+## Test for spatial autocorrelation in error terms of SAR model
+listmod <- regvarlistM("GISD",varlistLNIREU,varlistControl,month1,"SAR",dfds)
+listerror <- listmod[3:19]
+id <- 1:401
+dferror3 <- as.data.frame(id)
+for(i in 1:17){
+  a <-  listerror[[i]][c("residuals")]
+  a <- as.data.frame(a)
+  dferror3 <- cbind(dferror3,a)
+}
+res <- c("res2002", "res2003", "res2004", "res2005", "res2006", 
+         "res2007", "res2008", "res2009", "res2010", "res2011", "res2012", 
+         "res2101", "res2102", "res2103", "res2104", "res2105", "res2106")
+dfcounties <- dfds[,c("NUTS_CODE","name","geometry")]
+colnames(dferror3) <- c("id",res)
+dfcounties <- dfds[,c("NUTS_CODE","name","geometry")]
+dfcounties <- dfcounties[order(dfcounties$"NUTS_CODE"),]
+dfcounties$id <- 1:401
+dferror3 <- merge(dfcounties,dferror3,by="id")
+for(i in 1:17){
+  a <- moran.test(dferror3[[res[i]]], weighted_neighbors, zero.policy=T, alternative="two.sided")
+  a <- a[2:3]
+  a <- as.data.frame(a)
+  a <- as.data.frame(a[1,])
+  ifelse(i==1,
+         dfmoranserror <- a, 
+         dfmoranserror <- rbind(dfmoranserror,a)
+  )
+}
+colnames(dfmoranserror) <- c("p-value", "Moran's I")
+dfmoranserror <- round(dfmoranserror, digits = 5)
+dfmoranserror$month <- month1
+dfmoranserror <- dfmoranserror[,c(3,2,1)]
+rownames(dfmoranserror) <- c()
+stargazer(dfmoranserror, summary = FALSE, type = "latex")
+
+moran.plot(dferror3$res2004, weighted_neighbors, zero.policy=T,xlab="residuals, 20-04", ylab="spatially lagged residuals")
+moran.plot(dferror3$res2008, weighted_neighbors, zero.policy=T,xlab="residuals, 20-08", ylab="spatially lagged residuals")
+moran.plot(dferror3$res2012, weighted_neighbors, zero.policy=T,xlab="residuals, 20-12", ylab="spatially lagged residuals")
+moran.plot(dferror3$res2004, weighted_neighbors, zero.policy=T,xlab="residuals, 21-04", ylab="spatially lagged residuals")
+# => no linear spatial relationship between errors in SAR model observable! 
+
 
 
 ## Hypothesis I, IR ~ GISD
@@ -159,17 +220,17 @@ ggplot(dfdd, aes(x=GISD, y=LNIREU21.04)) +
 
 
 #### model GISD
-listIRGISD1 <- regvarlistM("GISD",varlistLNIREU,varlistControl,month,"SAR",dfds)
+listIRGISD1 <- regvarlistM("GISD",varlistLNIREU,varlistControl,month1,"SAC",dfds)
 dfIRGISD1 <- as.data.frame(listIRGISD1[1:2])
 modelsIRGISD1 <- listIRGISD1[3:19]
 names(dfIRGISD1)[names(dfIRGISD1)=="coefficientReg"] <- "SAR, age standardised"
 
-listIRGISD2 <- regvarlistM("GISD",varlistLNIR,varlistControl,month,"SAR",dfds)
+listIRGISD2 <- regvarlistM("GISD",varlistLNIR,varlistControl,month1,"SAC",dfds)
 dfIRGISD2 <- as.data.frame(listIRGISD2[1:2])
 modelsIRGISD2 <- listIRGISD2[3:19]
 names(dfIRGISD2)[names(dfIRGISD2)=="coefficientReg"] <- "SAR, not age standardised"
 
-listIRGISD3 <- regvarlistM("GISD",varlistLNIREU,varlistControl,month,"OLS",dfds)
+listIRGISD3 <- regvarlistM("GISD",varlistLNIREU,varlistControl,month1,"OLS",dfds)
 dfIRGISD3 <- as.data.frame(listIRGISD3[1:2])
 modelsIRGISD3 <- listIRGISD3[3:19]
 names(dfIRGISD3)[names(dfIRGISD3)=="coefficientReg"] <- "Lin. Reg., age standardised"
@@ -868,45 +929,40 @@ stargazer(dfdd[c("GISD","unemployment","medInc","workersAcadem","popDensity",
             c("p25","p75"))
 
 # table with dependent variables LONG
-stargazer(dfdd[c("CFREU","IR","cases","deaths","CFREU20.02",
-                 "CFREU20.03","CFREU20.04","CFREU20.05","CFREU20.06",
-                 "CFREU20.07","CFREU20.08","CFREU20.09","CFREU20.10",
-                 "CFREU20.11","CFREU20.12","CFREU21.01","CFREU21.02",
-                 "CFREU21.03","CFREU21.04","CFREU21.05",
+stargazer(dfdd[c("deathsEU","IREU","cases","deaths","deathsEU20.02",
+                 "deathsEU20.03","deathsEU20.04","deathsEU20.05","deathsEU20.06",
+                 "deathsEU20.07","deathsEU20.08","deathsEU20.09","deathsEU20.10",
+                 "deathsEU20.11","deathsEU20.12","deathsEU21.01","deathsEU21.02",
+                 "deathsEU21.03","deathsEU21.04","deathsEU21.05","deathsEU21.06",
                  "IREU20.02","IREU20.03","IREU20.04","IREU20.05","IREU20.06",
                  "IREU20.07","IREU20.08","IREU20.09","IREU20.10",
                  "IREU20.11","IREU20.12","IREU21.01","IREU21.02",
-                 "IREU21.03","IREU21.04","IREU21.05")], 
+                 "IREU21.03","IREU21.04","IREU21.05","IREU21.06")], 
           type = "latex", digits=2,flip = FALSE, omit.summary.stat = 
             c("median","p25","p75"))
 
-stargazer(dfdd[c("CFR","IR","cases","deaths","CFR20.02",
-                 "CFR20.03","CFR20.04","CFR20.05","CFR20.06",
-                 "CFR20.07","CFR20.08","CFR20.09","CFR20.10",
-                 "CFR20.11","CFR20.12","CFR21.01","CFR21.02",
-                 "CFR21.03","CFR21.04","CFR21.05",
-                 "IR20.02","IR20.03","IR20.04","IR20.05","IR20.06",
-                 "IR20.07","IR20.08","IR20.09","IR20.10",
-                 "IR20.11","IR20.12","IR21.01","IR21.02",
-                 "IR21.03","IR21.04","IR21.05")], 
+stargazer(dfdd[c("GISD","unemployment","workersAcadem","workersNoEdu", "hhInc", "debtQuota", 
+                 "grossInc", "businessTax", "employment", "shareWomen.x", 
+                 "shareForeign", "AfD", "medInc", "hospBeds", "popPerDoc",
+                 "popDensity","relCath")], 
           type = "latex", digits=2,flip = FALSE, omit.summary.stat = 
             c("median","p25","p75"))
 
 #Maps
-dfdsMAP <- dfds[,c("geometry", "KRS", "medInc", "IR", "IR20.04", "IR20.10", "IR21.04", "GISD", "VR21.10")]
+dfdsMAP <- dfds[,c("geometry", "KRS", "medInc", "IR", "IR20.04", "IR20.10", "IR21.04", "GISD", "VR21.06")]
 names(dfdsMAP) <- c("geometry", "KRS", "Median Income",
                     "Incidence Rates, until June 2021", 
                     "Incidence Rates, April 2020", 
                     "Incidence Rates, October 2020",
                     "Incidence Rates, April 2021", 
                     "German Index of Socioeconomic Deprivation", 
-                    "Vaccinations per Capita, October 2021")
+                    "Vaccinations per Capita, June 2021")
 
 plot(dfdsMAP["Incidence Rates, April 2020"], key.pos = 4, nbreaks = 10,border="white")
 plot(dfdsMAP["Incidence Rates, October 2020"], key.pos = 4, nbreaks = 10,border="white")
 plot(dfdsMAP["Incidence Rates, April 2021"], key.pos = 4, nbreaks = 10,border="white")
 plot(dfdsMAP["German Index of Socioeconomic Deprivation"], key.pos = 4, nbreaks = 10,border="white")
-plot(dfdsMAP["Vaccinations per Capita, October 2021"], key.pos = 4, nbreaks = 10,border="white")
+plot(dfdsMAP["Vaccinations per Capita, June 2021"], key.pos = 4, nbreaks = 10,border="white")
 plot(dfdsMAP["Incidence Rates, until June 2021"], key.pos = 4, nbreaks = 10,border="white")
 plot(dfdsMAP["Median Income"], key.pos = 4, nbreaks = 10,border="white")
 

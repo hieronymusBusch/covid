@@ -31,6 +31,18 @@ regvarlist <- function(indvar, depvarList, controlList, month, model, df){
       dfoutput <- rbind(dfoutput,c)
     }
   }
+  if(model=="SAC"){
+    for(a in 1:length(month)){
+      inputvar1 <- depvarList[a]
+      f <- as.formula(paste(inputvar1,paste(input2, collapse = " + "), sep = "~"))
+      lag = sacsarlm(f, data=df, listw = weighted_neighbors,
+                     tol.solve=1.0e-30, zero.policy=T)
+      b <- impacts(lag, listw = weighted_neighbors)
+      b <- unlist(b)
+      c <- data.frame(coefficientReg = as.numeric(b["total1"]))
+      dfoutput <- rbind(dfoutput,c)
+    }
+  }
   if(model=="OLS"){
     for(a in 1:length(month)) {
       inputvar1 <- depvarList[a]
@@ -82,6 +94,20 @@ regvarlistM <- function(var, depvarList, controlList, month, model, df){
             modellist[[len+1]] <- lag
           }
   }
+  if(model=="SAC"){
+    for(a in 1:length(month)) {
+      inputvar1 <- depvarList[a]
+      lag <- sacsarlm(as.formula(paste(inputvar1,paste(input2, collapse = " + "), 
+                                       sep = "~")), data=df, listw = weighted_neighbors,
+                      tol.solve=1.0e-30, zero.policy=T)
+      b <- impacts(lag, listw = weighted_neighbors)
+      b <- unlist(b)
+      c <- data.frame(coefficientReg = as.numeric(b["total1"]))
+      dfoutput <- rbind(dfoutput,c)
+      len <- length(modellist)
+      modellist[[len+1]] <- lag
+    }
+  }
   dfoutput$month <- month
   dfoutput$coefficientReg <- round(dfoutput$coefficientReg, digits = 10)
   names(modellist) <- depvarList
@@ -108,6 +134,19 @@ regvarlistP <- function(indvar, depvarList, controlList, indvarList, month, mode
       inputvar2 <- c(inputvar2, indvarList[a])
       f <- as.formula(paste(inputvar1,paste(inputvar2, collapse = " + "), sep = "~"))
       lag = lagsarlm(f, data=df, listw = weighted_neighbors,
+                     tol.solve=1.0e-30, zero.policy=T)
+      b <- impacts(lag, listw = weighted_neighbors)
+      b <- unlist(b)
+      c <- data.frame(coefficientReg = as.numeric(b["total1"]))
+      dfoutput <- rbind(dfoutput,c)
+    }
+  }
+  if(model=="SAC"){
+    for(a in 1:length(month)){
+      inputvar1 <- depvarList[a]
+      inputvar2 <- c(inputvar2, indvarList[a])
+      f <- as.formula(paste(inputvar1,paste(inputvar2, collapse = " + "), sep = "~"))
+      lag = sacsarlm(f, data=df, listw = weighted_neighbors,
                      tol.solve=1.0e-30, zero.policy=T)
       b <- impacts(lag, listw = weighted_neighbors)
       b <- unlist(b)
